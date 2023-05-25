@@ -15,7 +15,7 @@
   "name": "acquirejs",
   "packageManager": "yarn@1.22.17",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "packages/*",
+    "demos/*"
   ]
 }
