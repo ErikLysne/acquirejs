@@ -12,7 +12,7 @@
     "prettier": "^2.5.1",
     "turbo": "latest"
   },
-  "name": "acquirejs",
+  "name": "acquire",
   "packageManager": "yarn@1.22.17",
   "workspaces": [
     "packages/*",
