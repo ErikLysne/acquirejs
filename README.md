@@ -10,7 +10,7 @@ AcquireJS is a TypeScript library designed to streamline the process of working 
 
 - 🎭 <b>Mocking and testing</b> - Easily mock data and API responses in order to test your code. Mock Data Transfer Objects (DTOs) to write unit tests at the function and component level, mock API calls to write integration tests at the page level or mock API calls with relational data to write End-to-End (E2E) tests at the application level.
 
-> 💡 <b>Tip:</b> Wondering if AcquireJS is right for your project? Read the motivation! 🦸
+> 💡 <b>Tip:</b> Wondering if AcquireJS is right for your project? [Read the motivation](./motivation.md)!
 
 ---
 
