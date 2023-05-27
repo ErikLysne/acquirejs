@@ -8,7 +8,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest) --passWithNoTests",
     "test:watch": "yarn run jest --watch",
     "lint": "yarn tsc && yarn run eslint ./src",
     "build": "tsup ./src/index.ts --format cjs,esm --dts"
@@ -24,6 +24,7 @@
     "eslint-config-custom": "*",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   }
