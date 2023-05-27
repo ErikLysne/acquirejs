@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@acquire/core";
+import { ClassConstructor } from "@acquirejs/core";
 
 let getChanceInstance = async (): Promise<Chance.Chance | null> => {
   return Promise.resolve(null);

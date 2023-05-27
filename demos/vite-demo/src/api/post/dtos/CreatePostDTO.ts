@@ -1,4 +1,4 @@
-import { Expose } from "@acquire/core";
+import { Expose } from "@acquirejs/core";
 
 export class CreatePostDTO {
   @Expose() userId?: number;

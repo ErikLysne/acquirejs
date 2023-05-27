@@ -1,5 +1,5 @@
 {
-  "name": "@acquire/vite-demo",
+  "name": "@acquirejs/vite-demo",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@acquire/core": "*",
-    "@acquire/mocks": "*",
+    "@acquirejs/core": "*",
+    "@acquirejs/mocks": "*",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@mui/material": "^5.12.2",

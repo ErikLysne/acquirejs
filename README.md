@@ -1,8 +1,8 @@
-# Acquire
+# AcquireJS
 
 [![CI](https://github.com/ErikLysne/acquire/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/ErikLysne/acquire/actions/workflows/main.yml)
 
-Acquire is a compact TypeScript library designed to streamline the process of working with external APIs. The library aims to solve three common pain-points in the data fetching/mutation process:
+AcquireJS is a TypeScript library designed to streamline the process of working with external APIs. The library aims to solve three common pain-points in the data fetching/mutation process:
 
 - 🔒 <b>Type safety</b> - Ensure that data going into and out of your application from external APIs is type safe.
 
@@ -10,7 +10,7 @@ Acquire is a compact TypeScript library designed to streamline the process of wo
 
 - 🎭 <b>Mocking and testing</b> - Easily mock data and API responses in order to test your code. Mock Data Transfer Objects (DTOs) to write unit tests at the function and component level, mock API calls to write integration tests at the page level or mock API calls with relational data to write End-to-End (E2E) tests at the application level.
 
-> 💡 <b>Tip:</b> Wondering if Acquire is right for your project? Read the motivation! 🦸
+> 💡 <b>Tip:</b> Wondering if AcquireJS is right for your project? Read the motivation! 🦸
 
 ---
 
@@ -29,34 +29,34 @@ Acquire is a compact TypeScript library designed to streamline the process of wo
   - [Mutations](#mutations)
 - [Mocking and testing](#🎭-mocking-and-testing)
   - [Using the Mock decorator](#using-the-mock-decorator)
-  - [Using the @acquire/mocks package](#using-the-acquiremocks-package)
+  - [Using the @acquirejs/mocks package](#using-the-acquiremocks-package)
   - [Mocking data with relations using mock interceptors and the mock cache](#mocking-data-with-relations-using-mock-interceptors-and-the-mock-cache)
 
 ---
 
 ## 📦 Installation
 
-To get started, install the `@acquire/core` package and `reflect-metadata`:
+To get started, install the `@acquirejs/core` package and `reflect-metadata`:
 
 Using npm:
 
 ```bash
-npm install @acquire/core reflect-metadata
+npm install @acquirejs/core reflect-metadata
 ```
 
 Using yarn:
 
 ```bash
-yarn add @acquire/core reflect-metadata
+yarn add @acquirejs/core reflect-metadata
 ```
 
-> 💡 <b>Tip:</b> Acquire is built on [axios](https://axios-http.com/docs/intro). If you want to specify an axios config, you should also install axios.
+> 💡 <b>Tip:</b> AcquireJS is built on [axios](https://axios-http.com/docs/intro). If you want to specify an axios config, you should also install axios.
 
 ---
 
 ## ⚙️ Configuring TypeScript
 
-To use Acquire, we need to tweak some TypeScript settings. In `tsconfig.json`:
+To use AcquireJS, we need to tweak some TypeScript settings. In `tsconfig.json`:
 
 ```json
 {
@@ -75,14 +75,14 @@ We also need to import `reflect-metadata` at the entry-point of our application.
 
 ## ✨ Example usage
 
-### Setting up Acquire
+### Setting up AcquireJS
 
 First, create an instance of `Acquire`:
 
 ```typescript
 // src/api/acquire.ts
 
-import { Acquire } from "@acquire/core";
+import { Acquire } from "@acquirejs/core";
 
 const acquire = new Acquire();
 export default acquire;
@@ -94,7 +94,7 @@ We can also pass in an axios instance as the first argument:
 // src/api/acquire.ts
 
 import axios from "axios";
-import { Acquire } from "@acquire/core";
+import { Acquire } from "@acquirejs/core";
 
 const exampleAxios = axios.create({
   baseURL: "http://api.example.com"
@@ -110,7 +110,7 @@ This will allow multiple requests to share the same default settings, like base 
 
 ### Defining DTO and Model classes
 
-A key concept in Acquire is to use two sets of classes for each endpoint: A <b>DTO</b> class and a <b>Model</b> class. The DTO (Data Transfer Object) is a class representing the data as delivered from or to the server. It should only contain JSON primitive values.
+A key concept in AcquireJS is to use two sets of classes for each endpoint: A <b>DTO</b> class and a <b>Model</b> class. The DTO (Data Transfer Object) is a class representing the data as delivered from or to the server. It should only contain JSON primitive values.
 
 If we have an imaginary endpoint (`http://api.example.com/users/1`) that returns a user JSON response that looks like this:
 
@@ -155,7 +155,7 @@ Next, we create the Model class which represents the desired format of the data 
 ```typescript
 // src/api/users/models/UserModel.ts
 
-import { Expose, ToDate } from "@acquire/core";
+import { Expose, ToDate } from "@acquirejs/core";
 
 export default class UserModel {
   @Expose() id: number;
@@ -173,7 +173,7 @@ export default class UserModel {
 
 Here, there are a few things to note: First, we use the `Expose` decorator on each field of the class. This is because all values on the response object not defined on the `UserModel` will be stripped. If we wanted to omit some fields from the response object to tidy up our interfaces, we could simply drop the value from the Model class. This is only possible by explicitly annotating the values we wish to expose.
 
-> 💡 <b>Tip:</b> The `Expose` decorator comes straight from the [class-transformer](https://github.com/typestack/class-transformer) library, which is bundled with `@acquire/core`. All decorators and functions from `class-transformer` can be imported directly from `@acquire/core`.
+> 💡 <b>Tip:</b> The `Expose` decorator comes straight from the [class-transformer](https://github.com/typestack/class-transformer) library, which is bundled with `@acquirejs/core`. All decorators and functions from `class-transformer` can be imported directly from `@acquirejs/core`.
 
 The second thing to note is that we have configured the `UserModel` to automatically transform the date strings to `Date` objects. This is done by both specifying the type of the value as `Date` (for type safety) and adding a `ToDate` transformer decorator (for data mapping). This allows data mapping to be done in a declarative manner.
 
@@ -263,7 +263,7 @@ const user = await getUser({ userId: 10 });
 
 ### Requests that return arrays
 
-Endpoints that return lists of items typically return a JSON array response. We can inform Acquire that we are fetching an array by wrapping the Model and DTO classes in arrays:
+Endpoints that return lists of items typically return a JSON array response. We can inform AcquireJS that we are fetching an array by wrapping the Model and DTO classes in arrays:
 
 ```typescript
 export const getUsers = acquire({
@@ -285,12 +285,12 @@ Now, the return type of `getUsers` has `model` typed as a `UserModel[]` and `dto
 
 ### Mutations
 
-We can also use Acquire to perform mutations. In this case, we can specify the request `method` as something other then `GET` (the default) and optionally provide a `requestMapping`, similar to the `responseMapping`. In general, the DTO used for queries and mutations may differ. For instance, the `UserDTO` in the previous example has information about the ID of the user, if the user is currently active, as well as when the user was created, last updated and last active. While this information is not included in the body of a `POST` request, it may appear in the body we receive. Hence, we create separate `CreateUserDTO` and `CreateUserModel` classes to deal with the outgoing data:
+We can also use AcquireJS to perform mutations. In this case, we can specify the request `method` as something other then `GET` (the default) and optionally provide a `requestMapping`, similar to the `responseMapping`. In general, the DTO used for queries and mutations may differ. For instance, the `UserDTO` in the previous example has information about the ID of the user, if the user is currently active, as well as when the user was created, last updated and last active. While this information is not included in the body of a `POST` request, it may appear in the body we receive. Hence, we create separate `CreateUserDTO` and `CreateUserModel` classes to deal with the outgoing data:
 
 ```typescript
 // src/api/users/dtos/CreateUserDTO.ts
 
-import { Expose } from "@acquire/core";
+import { Expose } from "@acquirejs/core";
 
 export default class CreateUserDTO {
   @Expose() firstName: string;
@@ -368,7 +368,7 @@ By specifying the `CreateUserModel` in the `responseMapping`, the `data` argumen
 
 ## 🎭 Mocking and testing
 
-In the examples above, we specified the `UserDTO` class, but did not really use it for anything. The DTO classes come into play when we are writing tests. Instead of tediously writing our own mock data generation code, Acquire can handle this process for us through use of Mock decorators. When mocking requests, mock data can be generated in one of two ways:
+In the examples above, we specified the `UserDTO` class, but did not really use it for anything. The DTO classes come into play when we are writing tests. Instead of tediously writing our own mock data generation code, AcquireJS can handle this process for us through use of Mock decorators. When mocking requests, mock data can be generated in one of two ways:
 
 1. <b>ON DEMAND</b> - When mock data is generated on demand, it is created at the time when the request executor function is called and then discarded. This can be useful for simpler test cases, where the mocked data does not have any relation to other data. However, when mock data is generated on demand, calling the same request executor function multiple times will not yield the same response, unless the random generator is reset in between each call.
 
@@ -377,7 +377,7 @@ In the examples above, we specified the `UserDTO` class, but did not really use 
 > 💡 <b>Tip:</b> To see if a request is executed or mocked, and to see if the mocking is <i>on demand</i> or <i>from interceptors</i>, you can attach a logger to the `Acquire` instance:
 >
 > ```typescript
-> import { Acquire, AcquireLogger } from "@acquire/core";
+> import { Acquire, AcquireLogger } from "@acquirejs/core";
 >
 > const acquire = new Acquire().useLogger(new AcquireLogger());
 >
@@ -391,7 +391,7 @@ In order to mock requests, we first need to annotate the DTO classes, in order t
 We can use the `Mock` decorator to hard-code JSON primitive values for the DTO class:
 
 ```typescript
-import { Mock } from "@acquire/core";
+import { Mock } from "@acquirejs/core";
 
 export default class UserDTO {
   @Mock(10) id: number;
@@ -405,7 +405,7 @@ export default class UserDTO {
 This would pass those values onto the generated mock data. However, all mocked requests would then end up getting the exact same data, which might not be what we want. A more meaningful approach is to pass a callback to `Mock` that returns a JSON primitive value:
 
 ```typescript
-import { Mock } from "@acquire/core";
+import { Mock } from "@acquirejs/core";
 
 export default class UserDTO {
   @Mock(() => 10) id: number;
@@ -422,26 +422,26 @@ Here, you can use functions that generate randomly generated data and even execu
 >
 > When annotating the class with Mock decorators that take callbacks, the functions are not invoked until the moment when data is generated. Keep this in mind when using Mock decorators to generate random data.
 
-Acquire comes with an additional package `@acquire/mocks` that exports a large set of decorators that can be used to annotate DTO classes with mock data.
+AcquireJS comes with an additional package `@acquirejs/mocks` that exports a large set of decorators that can be used to annotate DTO classes with mock data.
 
-## Using the @acquire/mocks package
+## Using the @acquirejs/mocks package
 
 To get started, we must first install the mocks package:
 
 ```bash
-npm install @acquire/mocks
+npm install @acquirejs/mocks
 ```
 
 Or
 
 ```bash
-yarn add @acquire/mocks
+yarn add @acquirejs/mocks
 ```
 
 Then, somewhere early in our code (before any mocks are invoked), we need to call `initAcquireMocks`:
 
 ```typescript
-import { initAcquireMocks } from "@acquire/mocks";
+import { initAcquireMocks } from "@acquirejs/mocks";
 
 initAcquireMocks();
 ```
@@ -460,7 +460,7 @@ import {
   MockPick,
   MockBool,
   MockDate
-} from "@acquire/mocks";
+} from "@acquirejs/mocks";
 
 export default class UserDTO {
   @MockNatural() id: number;
@@ -476,13 +476,13 @@ export default class UserDTO {
 }
 ```
 
-> 💡 <b>Tip:</b> `@acquire/mocks` is a wrapper around the [Chance](https://chancejs.com/) library. All Mock decorators can be passed the arguments from their Chance counterpart. Some modification has been made to ensure that the decorators return JSON primitive values. For more info about the mock decorators, please refer to the Chance documentation.
+> 💡 <b>Tip:</b> `@acquirejs/mocks` is a wrapper around the [Chance](https://chancejs.com/) library. All Mock decorators can be passed the arguments from their Chance counterpart. Some modification has been made to ensure that the decorators return JSON primitive values. For more info about the mock decorators, please refer to the Chance documentation.
 
-> 💡 <b>Tip:</b> You don't need to worry about omitting this code in your production build if you are using a build tool that supports tree-shaking. Instead, you should conditionally call `initAcquireMocks` based on environment variables. If the `initAcquireMocks` call is never reached, the Chance library is not imported and all Mock decorators from `@acquire/mocks` are replaced with empty function calls.
+> 💡 <b>Tip:</b> You don't need to worry about omitting this code in your production build if you are using a build tool that supports tree-shaking. Instead, you should conditionally call `initAcquireMocks` based on environment variables. If the `initAcquireMocks` call is never reached, the Chance library is not imported and all Mock decorators from `@acquirejs/mocks` are replaced with empty function calls.
 
 ### Mocking requests
 
-When mocking an Acquire request, no actual network request is executed. Instead, a mock function is called to simulate a network request, which is used for testing. When mocking requests, the data is generated by the `Mock` decorators on the DTO class. There are two ways to mock a request:
+When mocking an AcquireJS request, no actual network request is executed. Instead, a mock function is called to simulate a network request, which is used for testing. When mocking requests, the data is generated by the `Mock` decorators on the DTO class. There are two ways to mock a request:
 
 1. <b>Calling `.mock()` instead of calling the request executor directly:</b>
 
@@ -537,7 +537,7 @@ To solve this, we need to add some additional steps. Firstly, we are going to ma
 ```typescript
 // src/api/users/dtos/UserDTO.ts
 
-import { MockID } from "@acquire/core";
+import { MockID } from "@acquirejs/core";
 import {
   MockFirstName,
   MockLastName,
@@ -546,7 +546,7 @@ import {
   MockPick,
   MockBool,
   MockDate
-} from "@acquire/mocks";
+} from "@acquirejs/mocks";
 
 export default class UserDTO {
   @MockID() id: number; // <- update this
@@ -562,7 +562,7 @@ export default class UserDTO {
 }
 ```
 
-Previously, we used the `MockNatural` decorator to mock a natural number (positive integer) for the `id` field. By replacing this with `MockID`, we inform Acquire that the `id` field represents the database ID.
+Previously, we used the `MockNatural` decorator to mock a natural number (positive integer) for the `id` field. By replacing this with `MockID`, we inform AcquireJS that the `id` field represents the database ID.
 
 > 💡 <b>Tip:</b> If you are working with an API that is using non-numerical IDs and this is important for your testing, you can provide your own ID generator to `MockID`. You may do this in the following way:
 
@@ -584,8 +584,8 @@ Next, we need to create a `PostDTO` class:
 ```typescript
 // src/api/posts/dto/PostDTO.ts
 
-import { MockID, MockRelationID, MockRelationProperty } from "@acquire/core";
-import { MockSentence, MockParagraph, MockDate } from "@acquire/mocks";
+import { MockID, MockRelationID, MockRelationProperty } from "@acquirejs/core";
+import { MockSentence, MockParagraph, MockDate } from "@acquirejs/mocks";
 import UserDTO from "../../../users/dto/UserDTO.ts";
 
 export default class PostDTO {
@@ -610,7 +610,7 @@ We are also going to create a `PostModel` class:
 ```typescript
 // src/api/posts/models/PostModel.ts
 
-import { Expose, ToDate } from "@acquire/core";
+import { Expose, ToDate } from "@acquirejs/core";
 
 export default class PostModel {
   @Expose() id: number;
@@ -663,7 +663,7 @@ Because we are now mocking DTOs with relationships, we need somewhere to store a
 ```typescript
 // src/api/acquire.ts
 
-import { Acquire, AcquireLogger, AcquireMockCache } from "@acquire/core";
+import { Acquire, AcquireLogger, AcquireMockCache } from "@acquirejs/core";
 
 const acquire = new Acquire()
   .useMockCache(new AcquireMockCache())

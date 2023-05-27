@@ -1,4 +1,4 @@
-import { MockDTO, MockID } from "@acquire/core";
+import { MockDTO, MockID } from "@acquirejs/core";
 import {
   MockAddress,
   MockCity,
@@ -14,7 +14,7 @@ import {
   MockSentence,
   MockUrl,
   MockZip
-} from "@acquire/mocks";
+} from "@acquirejs/mocks";
 
 export class GeoDTO {
   @MockLatitude() lat?: string;

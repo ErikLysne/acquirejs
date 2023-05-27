@@ -1,5 +1,5 @@
-import { acquireMockDataStorage } from "@acquire/core";
-import { seedChanceInstance } from "@acquire/mocks";
+import { acquireMockDataStorage } from "@acquirejs/core";
+import { seedChanceInstance } from "@acquirejs/mocks";
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import acquire, { mockCache } from "../api/acquire";
@@ -24,7 +24,7 @@ export default function AcquireMockProvider({
 
   React.useLayoutEffect(() => {
     (async () => {
-      await seedChanceInstance(RANDOM_SEED); // Reset the random generator for @acquire/mocks
+      await seedChanceInstance(RANDOM_SEED); // Reset the random generator for @acquirejs/mocks
       mockCache.seedRandomGenerator(RANDOM_SEED); // Reset the random generator for generating IDs in the mock cache
       mockCache.clear(); // Clear the cache
       acquireMockDataStorage.clearIDHead(); // Clear the default IDs generated in the mock cache

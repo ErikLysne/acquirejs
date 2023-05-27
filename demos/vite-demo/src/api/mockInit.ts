@@ -1,4 +1,4 @@
-import { initAcquireMocks } from "@acquire/mocks";
+import { initAcquireMocks } from "@acquirejs/mocks";
 
 export default async function mockInit() {
   initAcquireMocks();

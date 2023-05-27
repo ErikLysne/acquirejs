@@ -1,5 +1,5 @@
-import { MockID, MockRelationID } from "@acquire/core";
-import { MockParagraph, MockSentence } from "@acquire/mocks";
+import { MockID, MockRelationID } from "@acquirejs/core";
+import { MockParagraph, MockSentence } from "@acquirejs/mocks";
 import { UserDTO } from "../../user/dtos/UserDTO";
 
 export class PostDTO {

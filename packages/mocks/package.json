@@ -1,5 +1,5 @@
 {
-  "name": "@acquire/mocks",
+  "name": "@acquirejs/mocks",
   "author": "Erik Lysne",
   "license": "MIT",
   "version": "0.0.0",
@@ -14,7 +14,7 @@
     "build": "tsup ./src/index.ts --format cjs,esm --dts"
   },
   "dependencies": {
-    "@acquire/core": "*",
+    "@acquirejs/core": "*",
     "chance": "^1.1.11",
     "reflect-metadata": "^0.1.13"
   },

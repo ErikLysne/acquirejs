@@ -1,4 +1,4 @@
-import { generateMock } from "@acquire/core";
+import { generateMock } from "@acquirejs/core";
 import { mockCache } from "./acquire";
 import { CommentDTO } from "./comment/dtos/CommentDTO";
 import { PostDTO } from "./post/dtos/PostDTO";

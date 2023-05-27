@@ -1,4 +1,4 @@
-import { Acquire, AcquireLogger, AcquireMockCache } from "@acquire/core";
+import { Acquire, AcquireLogger, AcquireMockCache } from "@acquirejs/core";
 import axios from "axios";
 
 const axiosInstance = axios.create({

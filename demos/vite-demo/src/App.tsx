@@ -27,7 +27,7 @@ function App(): React.ReactElement {
                   to="/posts"
                   color="white"
                 >
-                  Acquire
+                  AcquireJS
                 </Typography>
                 <MockSwitch />
               </Toolbar>

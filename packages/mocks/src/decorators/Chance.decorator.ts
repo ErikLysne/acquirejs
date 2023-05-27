@@ -1,5 +1,5 @@
 import { getChanceInstance } from "@/utils/chance-instance";
-import { JSONValue, Mock } from "@acquire/core";
+import { JSONValue, Mock } from "@acquirejs/core";
 
 /* -------------------------------------------------------------------------- */
 /*                              Chance decorators                             */

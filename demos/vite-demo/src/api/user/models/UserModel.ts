@@ -1,4 +1,4 @@
-import { Expose, ToNumber, Type } from "@acquire/core";
+import { Expose, ToNumber, Type } from "@acquirejs/core";
 
 export class GeoModel {
   @Expose() @ToNumber(0) lat: number;
