@@ -1,5 +1,12 @@
 # @acquirejs/mocks
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies [99d6bb2]
+  - @acquirejs/core@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
