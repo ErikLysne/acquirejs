@@ -8,6 +8,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "postinstall": "echo '⚠<fe0f> WARNING: This package is currently under development and might be subject to breaking changes until version 1.0.0 is released.'",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest) --passWithNoTests",
     "test:watch": "yarn run jest --watch",
     "lint": "yarn tsc && yarn run eslint ./src",
