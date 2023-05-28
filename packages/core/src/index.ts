@@ -19,7 +19,13 @@ export { default as MockDTO } from "./decorators/mocks/MockDTO.decorator";
 export { default as MockID } from "./decorators/mocks/MockID.decorator";
 export { default as MockRelationID } from "./decorators/mocks/MockRelationID.decorator";
 export { default as MockRelationProperty } from "./decorators/mocks/MockRelationProperty.decorator";
+export { default as ToBoolean } from "./decorators/transformers/ToBoolean.decorator";
+export { default as ToDate } from "./decorators/transformers/ToDate.decorator";
+export { default as ToLowerCase } from "./decorators/transformers/ToLowerCase.decorator";
 export { default as ToNumber } from "./decorators/transformers/ToNumber.decorator";
+export { default as ToString } from "./decorators/transformers/ToString.decorator";
+export { default as ToUpperCase } from "./decorators/transformers/ToUpperCase.decorator";
+export { default as Trim } from "./decorators/transformers/Trim.decorator";
 /* -------------------------------------------------------------------------- */
 /*/
 /* --------------------------------- Errors --------------------------------- */
