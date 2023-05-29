@@ -5,7 +5,7 @@ class TestClass {
   @ToString()
   value: string;
 
-  @ToString("default")
+  @ToString({ defaultValue: "default" })
   valueWithDefault: string;
 }
 

@@ -2,7 +2,7 @@ import ToUpperCase from "@/decorators/transformers/ToUpperCase.decorator";
 import { plainToInstance } from "class-transformer";
 
 class TestClass {
-  @ToUpperCase("default")
+  @ToUpperCase({ defaultValue: "default" })
   value: string;
 }
 

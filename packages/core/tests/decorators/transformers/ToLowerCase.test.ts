@@ -2,7 +2,9 @@ import ToLowerCase from "@/decorators/transformers/ToLowerCase.decorator";
 import { plainToInstance } from "class-transformer";
 
 class TestClass {
-  @ToLowerCase("default")
+  @ToLowerCase({
+    defaultValue: "default"
+  })
   value: string;
 }
 

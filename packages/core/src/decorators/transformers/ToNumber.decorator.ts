@@ -1,8 +1,10 @@
 import { Transform } from "class-transformer";
 
-export default function ToNumber(defaultValue?: any): PropertyDecorator {
+export default function ToNumber(options?: {
+  defaultValue?: any;
+}): PropertyDecorator {
   return Transform(({ value }) => {
     const parsed = parseFloat(value);
-    return isNaN(parsed) ? defaultValue : parsed;
+    return isNaN(parsed) ? options?.defaultValue : parsed;
   });
 }

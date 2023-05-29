@@ -5,7 +5,7 @@ class TestClass {
   @ToNumber()
   value: number;
 
-  @ToNumber(10)
+  @ToNumber({ defaultValue: 10 })
   valueWithDefault: number;
 }
 
@@ -42,11 +42,11 @@ describe("decorator: ToNumber", () => {
     expect(getTransformedValue("value", null)).toBeUndefined();
   });
 
-  it("should transform invalid values to default value", () => {
+  it("should transform invalid values to defaultValue", () => {
     expect(getTransformedValue("valueWithDefault", "invalid")).toBe(10);
   });
 
-  it("should not overwrite a valid number with the default value", () => {
+  it("should not overwrite a valid number with the defaultValue", () => {
     expect(getTransformedValue("valueWithDefault", 123)).toBe(123);
   });
 });

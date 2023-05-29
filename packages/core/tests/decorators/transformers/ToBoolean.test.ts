@@ -4,7 +4,10 @@ import { plainToClass } from "class-transformer";
 class TestClass {
   @ToBoolean() value: boolean;
 
-  @ToBoolean([false, undefined]) valueWithCustom: boolean;
+  @ToBoolean({
+    falsyValues: [false, undefined]
+  })
+  valueWithCustom: boolean;
 }
 
 function getTransformedValue(key: keyof TestClass, value: any): boolean {

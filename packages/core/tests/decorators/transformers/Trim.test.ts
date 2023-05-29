@@ -2,7 +2,7 @@ import Trim from "@/decorators/transformers/Trim.decorator";
 import { plainToInstance } from "class-transformer";
 
 class TestClass {
-  @Trim("default") value: string;
+  @Trim({ defaultValue: "default" }) value: string;
 }
 
 function getTrimmedValue(value: any): string {
