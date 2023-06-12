@@ -1,5 +1,5 @@
 ---
-"@acquirejs/core": patch
+"@acquirejs/core": minor
 ---
 
 Updated transform decorators to use a common options interface.
