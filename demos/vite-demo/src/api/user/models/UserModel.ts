@@ -1,8 +1,8 @@
 import { Expose, ToNumber, Type } from "@acquirejs/core";
 
 export class GeoModel {
-  @Expose() @ToNumber(0) lat: number;
-  @Expose() @ToNumber(0) lng: number;
+  @Expose() @ToNumber({ fallback: 0 }) lat: number;
+  @Expose() @ToNumber({ fallback: 0 }) lng: number;
 }
 
 export class AddresModel {
