@@ -4,7 +4,7 @@
 
 > ⚠<fe0f> <b>WARNING:</b> This package is currently under development and might be subject to breaking changes until version 1.0.0 is released.
 
-AcquireJS is a TypeScript library designed to streamline the process of working with external APIs. The library aims to solve three common pain-points in the data fetching/mutation process:
+AcquireJS is a TypeScript library designed to streamline the process of working with REST APIs. The library aims to solve three common pain-points in the data fetching/mutation process:
 
 - 🔒 <b>Type safety</b> - Ensure that data going into and out of your application from external APIs is type safe.
 
