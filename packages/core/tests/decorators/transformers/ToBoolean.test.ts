@@ -1,5 +1,5 @@
 import ToBoolean from "@/decorators/transformers/ToBoolean.decorator";
-import { plainToClass } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 
 class TestClass {
   @ToBoolean() value: boolean;
@@ -11,7 +11,7 @@ class TestClass {
 }
 
 function getTransformedValue(key: keyof TestClass, value: any): boolean {
-  return plainToClass(TestClass, { [key]: value })[key];
+  return plainToInstance(TestClass, { [key]: value })[key];
 }
 
 describe("decorator: ToBoolean", () => {

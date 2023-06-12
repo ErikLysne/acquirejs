@@ -19,13 +19,38 @@ export { default as MockDTO } from "./decorators/mocks/MockDTO.decorator";
 export { default as MockID } from "./decorators/mocks/MockID.decorator";
 export { default as MockRelationID } from "./decorators/mocks/MockRelationID.decorator";
 export { default as MockRelationProperty } from "./decorators/mocks/MockRelationProperty.decorator";
-export { default as ToBoolean } from "./decorators/transformers/ToBoolean.decorator";
-export { default as ToDate } from "./decorators/transformers/ToDate.decorator";
-export { default as ToLowerCase } from "./decorators/transformers/ToLowerCase.decorator";
-export { default as ToNumber } from "./decorators/transformers/ToNumber.decorator";
-export { default as ToString } from "./decorators/transformers/ToString.decorator";
-export { default as ToUpperCase } from "./decorators/transformers/ToUpperCase.decorator";
-export { default as Trim } from "./decorators/transformers/Trim.decorator";
+export {
+  default as ToBoolean,
+  type ToBooleanOptions
+} from "./decorators/transformers/ToBoolean.decorator";
+export {
+  default as ToDate,
+  type ToDateOptions
+} from "./decorators/transformers/ToDate.decorator";
+export {
+  default as ToJSON,
+  type ToJSONOptions
+} from "./decorators/transformers/ToJSON.decorator";
+export {
+  default as ToLowerCaseString,
+  type ToLowerCaseStringOptions
+} from "./decorators/transformers/ToLowerCaseString.decorator";
+export {
+  default as ToNumber,
+  type ToNumberOptions
+} from "./decorators/transformers/ToNumber.decorator";
+export {
+  default as ToString,
+  type ToStringOptions
+} from "./decorators/transformers/ToString.decorator";
+export {
+  default as ToTrimmedString,
+  type ToTrimmedStringOptions
+} from "./decorators/transformers/ToTrimmedString.decorator";
+export {
+  default as ToUpperCaseString,
+  type ToUpperCaseStringOptions
+} from "./decorators/transformers/ToUpperCaseString.decorator";
 /* -------------------------------------------------------------------------- */
 /*/
 /* --------------------------------- Errors --------------------------------- */

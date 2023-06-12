@@ -4,39 +4,55 @@ import { plainToInstance } from "class-transformer";
 class TestClass {
   @ToDate()
   value: Date;
+
+  @ToDate({ fallback: "invalid date" })
+  valueWithFallback: Date | "invalid date";
 }
 
-function getTransformedValue(value: any): Date {
-  return plainToInstance(TestClass, { value })["value"];
+function getTransformedValue<TKey extends keyof TestClass>(
+  key: TKey,
+  value: any
+): TKey extends "value" ? Date : Date | string {
+  return plainToInstance(TestClass, { [key]: value })[key] as Date;
 }
 
 describe("decorator: ToDate", () => {
   it("should transform a valid string date to a Date object", () => {
-    expect(getTransformedValue("2023-05-25")).toBeInstanceOf(Date);
+    expect(getTransformedValue("value", "2023-05-25")).toBeInstanceOf(Date);
   });
 
   it("should transform a valid string date with time to a Date object", () => {
-    expect(getTransformedValue("2023-05-25T10:30:00Z")).toBeInstanceOf(Date);
+    expect(getTransformedValue("value", "2023-05-25T10:30:00Z")).toBeInstanceOf(
+      Date
+    );
   });
 
   it("should transform a valid timestamp number to a Date object", () => {
-    expect(getTransformedValue(1621939200000)).toBeInstanceOf(Date);
+    expect(getTransformedValue("value", 1621939200000)).toBeInstanceOf(Date);
   });
 
   it("should transform a valid Date object to the same date", () => {
     const date = new Date();
-    expect(getTransformedValue(date).getTime()).toEqual(date.getTime());
+    expect(getTransformedValue("value", date).getTime()).toEqual(
+      date.getTime()
+    );
   });
 
-  it("should transform an invalid string date to null", () => {
-    expect(getTransformedValue("invalid")).toBeNull();
+  it("should transform to null if the transformation fails and no fallback is set", () => {
+    expect(getTransformedValue("value", "invalid")).toBeNull();
+    expect(getTransformedValue("value", "1234567890")).toBeNull();
+    expect(getTransformedValue("value", true)).toBeNull();
   });
 
-  it("should transform an invalid timestamp number to null", () => {
-    expect(getTransformedValue("1234567890")).toBeNull();
-  });
-
-  it("should transform an invalid value to null", () => {
-    expect(getTransformedValue(true)).toBeNull();
+  it("should transform invalid values to the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", "invalid")).toEqual(
+      "invalid date"
+    );
+    expect(getTransformedValue("valueWithFallback", "1234567890")).toEqual(
+      "invalid date"
+    );
+    expect(getTransformedValue("valueWithFallback", true)).toEqual(
+      "invalid date"
+    );
   });
 });

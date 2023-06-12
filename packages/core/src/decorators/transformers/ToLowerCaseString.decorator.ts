@@ -2,13 +2,15 @@ import convertToString from "@/functions/convertToString.function";
 import { AcquireTransformerOptions } from "@/interfaces/AcquireTransformerOptions.interface";
 import { Transform } from "class-transformer";
 
-export interface ToStringOptions extends AcquireTransformerOptions {}
+export interface ToLowerCaseStringOptions extends AcquireTransformerOptions {}
 
-export default function ToString(options?: ToStringOptions): PropertyDecorator {
+export default function ToLowerCaseString(
+  options?: ToLowerCaseStringOptions
+): PropertyDecorator {
   const { fallback = null, classTransformOptions } = options ?? {};
 
   return Transform(
-    ({ value }) => convertToString(value) || fallback,
+    ({ value }) => convertToString(value)?.toLowerCase() || fallback,
     classTransformOptions
   );
 }

@@ -5,8 +5,8 @@ class TestClass {
   @ToString()
   value: string;
 
-  @ToString({ defaultValue: "default" })
-  valueWithDefault: string;
+  @ToString({ fallback: "default" })
+  valueWithFallback: string;
 }
 
 class CustomToString {
@@ -36,19 +36,24 @@ describe("decorator: ToString", () => {
     expect(getTransformedValue("value", "hello")).toEqual("hello");
   });
 
-  it("should transform null and undefined to defaultValue", () => {
-    expect(getTransformedValue("valueWithDefault", null)).toEqual("default");
-    expect(getTransformedValue("valueWithDefault", undefined)).toEqual(
+  it("should transform to null if the transformation fails and no fallback is set", () => {
+    expect(getTransformedValue("value", null)).toBeNull();
+    expect(getTransformedValue("value", undefined)).toBeNull();
+  });
+
+  it("should transform invalid values to the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", null)).toEqual("default");
+    expect(getTransformedValue("valueWithFallback", undefined)).toEqual(
       "default"
     );
   });
 
-  it("should transform an empty string to defaultValue", () => {
-    expect(getTransformedValue("valueWithDefault", "")).toEqual("default");
+  it("should transform an empty string to the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", "")).toEqual("default");
   });
 
-  it("should transform [object Object] to defaultValue", () => {
-    expect(getTransformedValue("valueWithDefault", {})).toEqual("default");
+  it("should transform [object Object] to the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", {})).toEqual("default");
   });
 
   it("should transform an object with toString method to a string", () => {
@@ -58,9 +63,9 @@ describe("decorator: ToString", () => {
     );
   });
 
-  it("should use the default value for objects with non-meaningful toString output", () => {
+  it("should transform to the fallback for objects with non-meaningful toString output", () => {
     const customToString = { toString: (): string => "" };
-    expect(getTransformedValue("valueWithDefault", customToString)).toEqual(
+    expect(getTransformedValue("valueWithFallback", customToString)).toEqual(
       "default"
     );
   });

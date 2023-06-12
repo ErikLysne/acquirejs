@@ -1,10 +1,18 @@
+import { AcquireTransformerOptions } from "@/interfaces/AcquireTransformerOptions.interface";
 import { Transform } from "class-transformer";
 
-export default function ToBoolean(options?: {
+export interface ToBooleanOptions
+  extends Omit<AcquireTransformerOptions, "fallback"> {
   falsyValues?: any[];
-}): PropertyDecorator {
-  const { falsyValues = [false, undefined, null, 0, NaN, "false", "0", ""] } =
-    options ?? {};
+}
+
+export default function ToBoolean(
+  options?: ToBooleanOptions
+): PropertyDecorator {
+  const {
+    falsyValues = [false, undefined, null, 0, NaN, "false", "0", ""],
+    classTransformOptions
+  } = options ?? {};
   const falsySet = new Set(falsyValues.filter((val) => !Number.isNaN(val)));
   const shouldTreatNaNAsFalsy = falsyValues.some(Number.isNaN);
 
@@ -13,5 +21,5 @@ export default function ToBoolean(options?: {
       return !shouldTreatNaNAsFalsy;
     }
     return !falsySet.has(value);
-  });
+  }, classTransformOptions);
 }

@@ -5,8 +5,15 @@ class TestClass {
   @ToNumber()
   value: number;
 
-  @ToNumber({ defaultValue: 10 })
-  valueWithDefault: number;
+  @ToNumber({ fallback: 10 })
+  valueWithFallback: number;
+
+  @ToNumber({
+    fallback: 10,
+    decimalSeparator: ",",
+    thousandsSeparator: "_"
+  })
+  valueWithSeparators: number;
 }
 
 function getTransformedValue(key: keyof TestClass, value: any): number {
@@ -30,23 +37,33 @@ describe("decorator: ToNumber", () => {
     expect(getTransformedValue("value", 456.789)).toBeCloseTo(456.789);
   });
 
-  it("should transform an invalid string number to undefined", () => {
-    expect(getTransformedValue("value", "not a number")).toBeUndefined();
+  it("should transform to null if the transformation fails and no fallback is set", () => {
+    expect(getTransformedValue("value", undefined)).toBeNull();
+    expect(getTransformedValue("value", "not a number")).toBeNull();
+    expect(getTransformedValue("value", true)).toBeNull();
   });
 
-  it("should transform a boolean to undefined", () => {
-    expect(getTransformedValue("value", true)).toBeUndefined();
+  it("should transform invalid values to the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", "invalid")).toBe(10);
   });
 
-  it("should transform a null value to undefined", () => {
-    expect(getTransformedValue("value", null)).toBeUndefined();
+  it("should not overwrite a valid number with the fallback", () => {
+    expect(getTransformedValue("valueWithFallback", 123)).toBe(123);
   });
 
-  it("should transform invalid values to defaultValue", () => {
-    expect(getTransformedValue("valueWithDefault", "invalid")).toBe(10);
+  it("should transform a string with custom separators to a number", () => {
+    expect(getTransformedValue("valueWithSeparators", "1_234,56")).toBeCloseTo(
+      1234.56
+    );
   });
 
-  it("should not overwrite a valid number with the defaultValue", () => {
-    expect(getTransformedValue("valueWithDefault", 123)).toBe(123);
+  it("should transform a string with custom thousands separator to a number", () => {
+    expect(getTransformedValue("valueWithSeparators", "1_234")).toEqual(1234);
+  });
+
+  it("should transform a string with custom decimal separator to a number", () => {
+    expect(getTransformedValue("valueWithSeparators", "123,456")).toBeCloseTo(
+      123.456
+    );
   });
 });

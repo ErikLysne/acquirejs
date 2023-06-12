@@ -1,11 +1,13 @@
+import { AcquireTransformerOptions } from "@/interfaces/AcquireTransformerOptions.interface";
 import { Transform } from "class-transformer";
 
-export default function ToJSON(): PropertyDecorator {
+export interface ToJSONOptions
+  extends Omit<AcquireTransformerOptions, "fallback"> {}
+
+export default function ToJSON(options?: ToJSONOptions): PropertyDecorator {
+  const { classTransformOptions } = options ?? {};
+
   return Transform(({ value }) => {
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      return null;
-    }
-  });
+    return JSON.stringify(value);
+  }, classTransformOptions);
 }
