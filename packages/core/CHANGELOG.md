@@ -1,5 +1,13 @@
 # @acquirejs/core
 
+## 0.1.0
+
+### Minor Changes
+
+- db0dc58: Updated transform decorators to use a common options interface.
+  Renamed ToLowerCase, ToUpperCase and Trim decorators to ToLowerCaseString, ToUpperCaseString and ToTrimmedString for consistent naming.
+  Added support for decimalSeparator and thousandSeparator on ToNumber decorator.
+
 ## 0.0.3
 
 ### Patch Changes
