@@ -11,7 +11,11 @@ describe("middleware: AcquireRequestLogger", () => {
 
   const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   const acquire = new Acquire(axiosInstance);
-  acquire.use(new AcquireRequestLogger());
+  acquire.use(
+    new AcquireRequestLogger({
+      timezone: "UTC"
+    })
+  );
 
   const OriginalDate = global.Date;
 
@@ -19,8 +23,9 @@ describe("middleware: AcquireRequestLogger", () => {
     const mockDate = new OriginalDate("2023-07-03T11:22:33Z");
 
     function MockDate(): Date {
-      return mockDate;
+      return new OriginalDate(mockDate.getTime());
     }
+
     MockDate.UTC = OriginalDate.UTC;
     MockDate.parse = OriginalDate.parse;
     MockDate.now = (): number => mockDate.getTime();
@@ -28,6 +33,10 @@ describe("middleware: AcquireRequestLogger", () => {
     MockDate.prototype.constructor = MockDate;
 
     global.Date = MockDate as any;
+  });
+
+  afterAll(() => {
+    global.Date = OriginalDate;
   });
 
   afterEach(() => {
@@ -47,7 +56,7 @@ describe("middleware: AcquireRequestLogger", () => {
     await getUsers();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - ${green}            [Executed]${reset} ${cyan}[GET: /users]:${reset} ${green}200${reset}`
+      `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - ${green}            [Executed]${reset} ${cyan}[GET: /users]:${reset} ${green}200${reset}`
     );
   });
 
@@ -63,7 +72,7 @@ describe("middleware: AcquireRequestLogger", () => {
     await expect(getUsers()).rejects.toThrow();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - ${green}            [Executed]${reset} ${cyan}[GET: /users]:${reset} ${red}404 - Request failed with status code 404${reset}`
+      `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - ${green}            [Executed]${reset} ${cyan}[GET: /users]:${reset} ${red}404 - Request failed with status code 404${reset}`
     );
   });
 
@@ -77,7 +86,7 @@ describe("middleware: AcquireRequestLogger", () => {
     await getUsers.mock();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - ${yellow}[Mocked ->${brightBlue}on demand${yellow}]${reset} ${cyan}[GET: /users]:${reset} ${green}200 - OK${reset}`
+      `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - ${yellow}[Mocked ->${brightBlue}on demand${yellow}]${reset} ${cyan}[GET: /users]:${reset} ${green}200 - OK${reset}`
     );
   });
 
@@ -102,7 +111,7 @@ describe("middleware: AcquireRequestLogger", () => {
     await expect(getUsers.mock()).rejects.toThrow();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - ${yellow}[Mocked ->${green}intercepted${yellow}]${reset} ${cyan}[GET: /users]:${reset} ${red}404 - Not found${reset}`
+      `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - ${yellow}[Mocked ->${green}intercepted${yellow}]${reset} ${cyan}[GET: /users]:${reset} ${red}404 - Not found${reset}`
     );
   });
 });

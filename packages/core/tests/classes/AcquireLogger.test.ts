@@ -4,7 +4,7 @@ describe("class: AcquireLogger", () => {
   const { blue, red, brightBlack, reset } = AcquireLogger.color;
   const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-  const logger = new AcquireLogger();
+  const logger = new AcquireLogger({ timezone: "UTC" });
 
   const OriginalDate = global.Date;
 
@@ -12,8 +12,9 @@ describe("class: AcquireLogger", () => {
     const mockDate = new OriginalDate("2023-07-03T11:22:33Z");
 
     function MockDate(): Date {
-      return mockDate;
+      return new OriginalDate(mockDate.getTime());
     }
+
     MockDate.UTC = OriginalDate.UTC;
     MockDate.parse = OriginalDate.parse;
     MockDate.now = (): number => mockDate.getTime();
@@ -44,7 +45,7 @@ describe("class: AcquireLogger", () => {
       logger.info("Hello world");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - Hello world`
+        `${reset}${blue}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - Hello world`
       );
     });
 
@@ -52,7 +53,7 @@ describe("class: AcquireLogger", () => {
       logger.error("Hello world");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 13:22:33${reset} - Hello world`
+        `${reset}${red}[Acquire]${reset} - ${brightBlack}03/07/2023 11:22:33${reset} - Hello world`
       );
     });
   });

@@ -2,13 +2,26 @@ import { LogLevel, Logger, LoggerFn } from "@/interfaces/Logger.interface";
 
 export type AcquireLogColor = keyof typeof AcquireLogger.color;
 
+export interface AcquireLoggerOptions {
+  logFn?: LoggerFn;
+  logLevels?: LogLevel[] | "all";
+  timezone?: string;
+}
+
 export default class AcquireLogger implements Logger {
-  constructor(
-    private logFn: LoggerFn = console.log,
-    private logLevels: LogLevel[] | "all" = "all"
-  ) {
+  private logFn: LoggerFn;
+  private logLevels: LogLevel[] | "all";
+  private timezone: string;
+
+  constructor(options?: AcquireLoggerOptions) {
+    const {
+      logFn = console.log,
+      logLevels = "all",
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    } = options ?? {};
     this.logFn = logFn;
     this.logLevels = logLevels;
+    this.timezone = timezone;
   }
 
   static color = {
@@ -64,6 +77,29 @@ export default class AcquireLogger implements Logger {
     return `${AcquireLogger.style.bold}${text}${AcquireLogger.style.reset}`;
   }
 
+  private now(): Date {
+    const date = new Date();
+
+    const dateTimeFormat = new Intl.DateTimeFormat("en-US", {
+      timeZone: this.timezone,
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+    const parts = dateTimeFormat.formatToParts(date);
+
+    const hours = parts.find((part) => part.type === "hour")?.value;
+    const minutes = parts.find((part) => part.type === "minute")?.value;
+    const seconds = parts.find((part) => part.type === "second")?.value;
+
+    date.setHours(parseInt(hours || "0"));
+    date.setMinutes(parseInt(minutes || "0"));
+    date.setSeconds(parseInt(seconds || "0"));
+
+    return date;
+  }
+
   private makeLog(
     level: LogLevel,
     color: AcquireLogColor,
@@ -78,7 +114,7 @@ export default class AcquireLogger implements Logger {
       return value.toString().padStart(2, "0");
     }
 
-    const timestamp = new Date();
+    const timestamp = this.now();
     const timestampPrefix = AcquireLogger.colorize(
       `${zeroPad(timestamp.getDate())}/${zeroPad(
         timestamp.getMonth() + 1

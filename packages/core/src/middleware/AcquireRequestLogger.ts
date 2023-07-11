@@ -1,26 +1,28 @@
-import AcquireLogger, { AcquireLogColor } from "@/classes/AcquireLogger.class";
+import AcquireLogger, {
+  AcquireLogColor,
+  AcquireLoggerOptions
+} from "@/classes/AcquireLogger.class";
 import RequestMethod from "@/constants/RequestMethod.const";
 import { AcquireContext } from "@/interfaces/AcquireContext.interface";
 import {
   AcquireMiddlewareClass,
   AcquireMiddlewareFn
 } from "@/interfaces/AcquireMiddleware.interface";
-import { LogLevel, LoggerFn } from "@/interfaces/Logger.interface";
 import axios from "axios";
 
-export interface AcquireRequestLoggerOptions {
-  logFn?: LoggerFn;
-  logLevels?: LogLevel[] | "all";
+export interface AcquireRequestLoggerOptions extends AcquireLoggerOptions {
+  order?: number;
 }
 
 export default class AcquireRequestLogger implements AcquireMiddlewareClass {
-  public order = 1000;
+  public order;
 
   private logger: AcquireLogger;
 
   constructor(options?: AcquireRequestLoggerOptions) {
-    const { logFn, logLevels } = options ?? {};
-    this.logger = new AcquireLogger(logFn, logLevels);
+    const { order = 1000, ...rest } = options ?? {};
+    this.logger = new AcquireLogger(rest);
+    this.order = order;
   }
 
   getStatusCodeColor(statusCode: number): AcquireLogColor {
