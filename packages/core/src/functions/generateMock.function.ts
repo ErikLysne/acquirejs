@@ -1,7 +1,7 @@
 import AcquireMockCache from "@/classes/AcquireMockCache.class";
 import acquireMockDataStorage from "@/classes/AcquireMockDataStorage.class";
 import AcquireError from "@/errors/AcquireError.error";
-import { AcquireMockContext } from "@/interfaces/AcquireMockContext.interface";
+import { AcquireContext } from "@/interfaces/AcquireContext.interface";
 import { AcquireMockGenerator } from "@/interfaces/AcquireMockGenerator.interface";
 import { ClassConstructor } from "@/interfaces/ClassConstructor.interface";
 import { plainToInstance } from "class-transformer";
@@ -47,7 +47,7 @@ export async function createMockObject<
 >(
   cls: TClassConstructor,
   mockCache?: AcquireMockCache,
-  mockContext?: AcquireMockContext
+  context?: AcquireContext
 ): Promise<InstanceType<TClassConstructor>> {
   const mockDecorators = acquireMockDataStorage.mockDecoratorMap.get(cls);
 
@@ -74,9 +74,7 @@ export async function createMockObject<
     if (!mockCache || !(MockRelationClass || mockRelationProperty)) {
       // No mockCache or no MockRelationID or MockRelationProperty decorator -> create the value directly from the generator
       value =
-        typeof generator === "function"
-          ? await generator(mockContext)
-          : generator;
+        typeof generator === "function" ? await generator(context) : generator;
     } else {
       if (MockRelationClass) {
         let relationID = relationIDMap.get(MockRelationClass);
@@ -142,7 +140,7 @@ export default async function generateMock<
   classConstructor: TClassConstructor,
   count?: undefined,
   mockCache?: AcquireMockCache,
-  mockContext?: AcquireMockContext
+  context?: AcquireContext
 ): Promise<InstanceType<TClassConstructor>>;
 export default async function generateMock<
   TClassConstructor extends ClassConstructor
@@ -150,7 +148,7 @@ export default async function generateMock<
   classConstructor: TClassConstructor,
   count: number,
   mockCache?: AcquireMockCache,
-  mockContext?: AcquireMockContext
+  context?: AcquireContext
 ): Promise<InstanceType<TClassConstructor>[]>;
 export default async function generateMock<
   TClassConstructor extends ClassConstructor
@@ -158,18 +156,16 @@ export default async function generateMock<
   classConstructor: TClassConstructor,
   count?: number,
   mockCache?: AcquireMockCache,
-  mockContext?: AcquireMockContext
+  context?: AcquireContext
 ): Promise<InstanceType<TClassConstructor> | InstanceType<ClassConstructor>[]> {
   if (typeof count === "number") {
     const mockCalls = [];
 
     for (let i = 0; i < count; i++) {
-      mockCalls.push(
-        createMockObject(classConstructor, mockCache, mockContext)
-      );
+      mockCalls.push(createMockObject(classConstructor, mockCache, context));
     }
     return Promise.all(mockCalls);
   }
 
-  return createMockObject(classConstructor, mockCache, mockContext);
+  return createMockObject(classConstructor, mockCache, context);
 }

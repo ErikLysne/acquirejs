@@ -1,7 +1,10 @@
 import { AcquireArgs } from "@/interfaces/AcquireArgs.interface";
 import { AcquireCallArgs } from "@/interfaces/AcquireCallArgs.interface";
+import {
+  AcquireMiddleware,
+  AcquireMiddlewareWithOrder
+} from "@/interfaces/AcquireMiddleware.interface";
 import { ClassOrClassArray } from "@/interfaces/ClassOrClassArray.interface";
-import { Logger } from "@/interfaces/Logger.interface";
 import { OmitFirstArg } from "@/interfaces/OmitFirstArg.interface";
 import axios, { AxiosInstance } from "axios";
 import AcquireMockCache from "./AcquireMockCache.class";
@@ -62,20 +65,34 @@ interface BoundAcquireRequestExecutor<
       TRequestModel
     >["mock"]
   >;
-  setMockInterceptor: AcquireRequestExecutor<
+  use: AcquireRequestExecutor<
     TCallArgs,
     TResponseDTO,
     TResponseModel,
     TRequestDTO,
     TRequestModel
-  >["setMockInterceptor"];
-  clearMockInterceptor: AcquireRequestExecutor<
+  >["use"];
+  useOnExecution: AcquireRequestExecutor<
     TCallArgs,
     TResponseDTO,
     TResponseModel,
     TRequestDTO,
     TRequestModel
-  >["clearMockInterceptor"];
+  >["useOnExecution"];
+  useOnMocking: AcquireRequestExecutor<
+    TCallArgs,
+    TResponseDTO,
+    TResponseModel,
+    TRequestDTO,
+    TRequestModel
+  >["useOnMocking"];
+  clearMiddlewares: AcquireRequestExecutor<
+    TCallArgs,
+    TResponseDTO,
+    TResponseModel,
+    TRequestDTO,
+    TRequestModel
+  >["clearMiddlewares"];
 }
 
 export interface Acquire {
@@ -86,7 +103,7 @@ export interface Acquire {
     TRequestDTO extends ClassOrClassArray = any,
     TRequestModel extends ClassOrClassArray = any
   >(
-    args?: AcquireArgs<
+    acquireArgs: AcquireArgs<
       TCallArgs,
       TResponseDTO,
       TResponseModel,
@@ -105,10 +122,11 @@ export interface Acquire {
 
 export class Acquire extends CallableInstance {
   private __isAcquireInstance = true;
+  private executionMiddlewares: AcquireMiddlewareWithOrder[] = [];
+  private mockingMiddlewares: AcquireMiddlewareWithOrder[] = [];
 
   constructor(
     private axiosInstance: AxiosInstance = axios,
-    private logger?: Logger,
     private mockCache?: AcquireMockCache,
     private isMockingEnabled = false
   ) {
@@ -119,6 +137,28 @@ export class Acquire extends CallableInstance {
     return !!(instance as Acquire)?.__isAcquireInstance;
   }
 
+  public use(middleware: AcquireMiddleware, order = 0): this {
+    this.executionMiddlewares.push([middleware, order]);
+    this.mockingMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public useOnExecution(middleware: AcquireMiddleware, order = 0): this {
+    this.executionMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public useOnMocking(middleware: AcquireMiddleware, order = 0): this {
+    this.mockingMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public clearMiddlewares(): this {
+    this.executionMiddlewares = [];
+    this.mockingMiddlewares = [];
+    return this;
+  }
+
   public setAxiosInstance(axiosInstance: AxiosInstance): this {
     this.axiosInstance = axiosInstance;
     return this;
@@ -126,15 +166,6 @@ export class Acquire extends CallableInstance {
 
   public getAxiosInstance(): AxiosInstance {
     return this.axiosInstance;
-  }
-
-  public useLogger(logger: Logger): this {
-    this.logger = logger;
-    return this;
-  }
-
-  public getLogger(): Logger | undefined {
-    return this.logger;
   }
 
   public useMockCache(mockCache: AcquireMockCache): this {
@@ -172,7 +203,7 @@ export class Acquire extends CallableInstance {
     TRequestDTO extends ClassOrClassArray = any,
     TRequestModel extends ClassOrClassArray = any
   >(
-    args: AcquireArgs<
+    acquireArgs: AcquireArgs<
       TCallArgs,
       TResponseDTO,
       TResponseModel,
@@ -187,15 +218,16 @@ export class Acquire extends CallableInstance {
     TRequestDTO,
     TRequestModel
   > {
-    const { request } = args;
+    const { request } = acquireArgs;
 
-    if (!request?.path && !request?.url && !request?.baseURL) {
-      this.logger?.warn("'baseURL', 'url' or 'path' is missing.");
+    if (!request.path && !request.url && !request.baseURL) {
+      console.warn("'baseURL', 'url' or 'path' is missing.");
     }
 
     const getConfig: AcquireRequestExecutorGetConfig = () => ({
       axiosInstance: this.axiosInstance,
-      logger: this.logger,
+      executionMiddlewares: this.executionMiddlewares,
+      mockingMiddlewares: this.mockingMiddlewares,
       mockCache: this.mockCache,
       isMockingEnabled: this.isMockingEnabled
     });
@@ -210,12 +242,15 @@ export class Acquire extends CallableInstance {
 
     requestExecutor.execute = requestExecutor.execute.bind(
       requestExecutor,
-      args
+      acquireArgs
     );
 
-    requestExecutor.mock = requestExecutor.mock.bind(requestExecutor, args);
+    requestExecutor.mock = requestExecutor.mock.bind(
+      requestExecutor,
+      acquireArgs
+    );
 
-    return requestExecutor as BoundAcquireRequestExecutor<
+    return requestExecutor as unknown as BoundAcquireRequestExecutor<
       TCallArgs,
       TResponseDTO,
       TResponseModel,
@@ -230,7 +265,7 @@ export class Acquire extends CallableInstance {
     TRequestDTO extends ClassOrClassArray = any,
     TRequestModel extends ClassOrClassArray = any
   >(
-    args: AcquireArgs<
+    acquireArgs: AcquireArgs<
       TCallArgs,
       TResponseDTO,
       TResponseModel,
@@ -245,6 +280,6 @@ export class Acquire extends CallableInstance {
     TRequestDTO,
     TRequestModel
   > {
-    return (args) => this.acquire(args);
+    return (acquireArgs) => this.acquire(acquireArgs);
   }
 }

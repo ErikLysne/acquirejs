@@ -1,17 +1,17 @@
 import { Acquire } from "@/classes/Acquire.class";
 import { AcquireRequestExecutor } from "@/classes/AcquireRequestExecutor.class";
 
-const acquire = new Acquire();
-
-const requestExecutorExecuteSpy = jest
-  .spyOn(AcquireRequestExecutor.prototype, "execute")
-  .mockImplementation(() => Promise.resolve() as any);
-
-const requestExecutorMockSpy = jest
-  .spyOn(AcquireRequestExecutor.prototype, "mock")
-  .mockImplementation(() => Promise.resolve() as any);
-
 describe("class: Acquire", () => {
+  const acquire = new Acquire();
+
+  const requestExecutorExecuteSpy = jest
+    .spyOn(AcquireRequestExecutor.prototype, "execute")
+    .mockImplementation(() => Promise.resolve() as any);
+
+  const requestExecutorMockSpy = jest
+    .spyOn(AcquireRequestExecutor.prototype, "mock")
+    .mockImplementation(() => Promise.resolve() as any);
+
   beforeEach(() => {
     acquire.disableMocking();
   });
@@ -60,37 +60,37 @@ describe("class: Acquire", () => {
       });
     });
   });
-});
 
-describe("function: withCallArgs", () => {
-  it("should call execute on AcquireRequestExecutor with the acquireArgs and callArgs", async () => {
-    const getUrl = (args?: { userId: number }): string =>
-      `https://example.com/user/${args?.userId}`;
+  describe("function: withCallArgs", () => {
+    it("should call execute on AcquireRequestExecutor with the acquireArgs and callArgs", async () => {
+      const getUrl = (args?: { userId: number }): string =>
+        `https://example.com/user/${args?.userId}`;
 
-    class UserModel {}
+      class UserModel {}
 
-    const getUser = acquire.withCallArgs<{ userId: number }>()({
-      request: {
-        url: getUrl
-      },
-      responseMapping: {
-        Model: UserModel
-      }
-    });
-
-    await getUser({ userId: 10 });
-
-    expect(requestExecutorExecuteSpy).toHaveBeenCalledWith(
-      {
+      const getUser = acquire.withCallArgs<{ userId: number }>()({
         request: {
           url: getUrl
         },
         responseMapping: {
           Model: UserModel
         }
-      },
-      { userId: 10 }
-    );
+      });
+
+      await getUser({ userId: 10 });
+
+      expect(requestExecutorExecuteSpy).toHaveBeenCalledWith(
+        {
+          request: {
+            url: getUrl
+          },
+          responseMapping: {
+            Model: UserModel
+          }
+        },
+        { userId: 10 }
+      );
+    });
   });
 
   describe("function: isAcquireInstance", () => {

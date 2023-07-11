@@ -3,8 +3,8 @@ import AcquireMockCache from "@/classes/AcquireMockCache.class";
 import axios from "axios";
 import { Expose } from "class-transformer";
 
-describe("Setup of endpoint with mock interceptor", () => {
-  it("should correctly mock the request, using the mock interceptor to customize the returned data", async () => {
+describe("Setup of endpoint with intercepting middleware", () => {
+  it("should correctly mock the request, using the middleware to customize the returned data", async () => {
     /* ---------------------------------- Setup --------------------------------- */
 
     class UserDTO {
@@ -63,20 +63,19 @@ describe("Setup of endpoint with mock interceptor", () => {
 
     /* ---------------------------- Setup mock logic ---------------------------- */
 
-    getUsers.setMockInterceptor(({ mockResponse, mockCache, callArgs }) => {
+    getUsers.use(({ response, mockCache, callArgs }) => {
       const { sortBy, sortByDescending, search, minAge, maxAge } =
         callArgs ?? {};
 
-      const dbSimulator = mockCache?.createDatabaseSimulator(UserDTO);
+      const dbSimulator = mockCache!.createDatabaseSimulator(UserDTO);
       const data = dbSimulator
-        ?.sort(sortBy, sortByDescending ? "desc" : "asc")
+        .sort(sortBy, sortByDescending ? "desc" : "asc")
         .search(search, ["name"])
         .filter(minAge ? (user): boolean => user.age >= minAge : undefined)
         .filter(maxAge ? (user): boolean => user.age <= maxAge : undefined)
         .get();
 
-      mockResponse.data = data;
-      return Promise.resolve(mockResponse);
+      response.data = data;
     });
 
     /* -------------------------------------------------------------------------- */

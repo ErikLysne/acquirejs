@@ -1,6 +1,6 @@
 import { initAcquireMocks } from "@acquirejs/mocks";
 
-export default async function mockInit() {
+export default async function acquireInit() {
   initAcquireMocks();
   return Promise.all([
     import("./comment/commentApiMocking"),

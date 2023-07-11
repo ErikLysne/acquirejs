@@ -38,7 +38,7 @@ describe("setup of endpoint with mocked relations", () => {
 
   beforeEach(() => {
     mockCache.clear();
-    getPosts.clearMockInterceptor();
+    getPosts.clearMiddlewares();
   });
 
   it("should throw an error if no data exists in the cache", () => {
@@ -62,26 +62,24 @@ describe("setup of endpoint with mocked relations", () => {
     });
   });
 
-  it("should intercept the mocking and return a custom response when mockInterceptor is set", async () => {
+  it("should intercept the mocking and return a custom response when middleware is set", async () => {
     await mockCache.fill(UserDTO, 10);
     await mockCache.fill(PostDTO, 50);
 
-    getPosts.setMockInterceptor(({ callArgs, mockResponse, mockCache }) => {
+    getPosts.use(({ callArgs, response, mockCache }) => {
       const { createdByUserId } = callArgs ?? {};
 
-      const dbSimulator = mockCache?.createDatabaseSimulator(PostDTO);
+      const dbSimulator = mockCache!.createDatabaseSimulator(PostDTO);
 
       const data = dbSimulator
-        ?.filter((post) => post.userId === createdByUserId)
+        .filter((post) => post.userId === createdByUserId)
         .get();
 
-      mockResponse.data = data;
-
-      return Promise.resolve(mockResponse);
+      response.data = data;
     });
 
     const posts = await getPosts({ createdByUserId: 5 });
 
-    expect(posts.dto.every((post) => post.userId === 5)).toBe(true);
+    expect(posts.dto.every((post) => post.userId === 5));
   });
 });
