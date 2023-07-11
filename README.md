@@ -1,6 +1,8 @@
 # AcquireJS
 
+[![TypeScript](https://img.shields.io/badge/--3178C6?logo=typescript&logoColor=ffffff)](https://www.typescriptlang.org/)
 [![CI](https://github.com/ErikLysne/acquire/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/ErikLysne/acquire/actions/workflows/main.yml)
+[![Npm package monthly downloads](https://badgen.net/npm/dm/@acquirejs/core)](https://npmjs.com/package/@acquirejs/core)
 
 > ⚠<fe0f> <b>WARNING:</b> This package is currently under development and might be subject to breaking changes until version 1.0.0 is released.
 
