@@ -9,13 +9,22 @@ describe("class: AcquireLogger", () => {
   const OriginalDate = global.Date;
 
   beforeAll(() => {
-    jest
-      .spyOn(global, "Date")
-      .mockImplementation(() => new OriginalDate("2023-07-03T11:22:33Z"));
+    const mockDate = new OriginalDate("2023-07-03T11:22:33Z");
+
+    function MockDate(): Date {
+      return mockDate;
+    }
+    MockDate.UTC = OriginalDate.UTC;
+    MockDate.parse = OriginalDate.parse;
+    MockDate.now = (): number => mockDate.getTime();
+    MockDate.prototype = OriginalDate.prototype;
+    MockDate.prototype.constructor = MockDate;
+
+    global.Date = MockDate as any;
   });
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    global.Date = OriginalDate;
   });
 
   afterEach(() => {
