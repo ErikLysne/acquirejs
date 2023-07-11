@@ -1,16 +1,17 @@
+import AcquireMockCache from "@/classes/AcquireMockCache.class";
 import { AcquireRequestExecutor } from "@/classes/AcquireRequestExecutor.class";
 import Mock from "@/decorators/mocks/Mock.decorator";
-import { AcquireMockCache } from "@/index";
 import isPlainObject from "@tests/testing-utils/isPlainObject.function";
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import MockAdapter from "axios-mock-adapter";
 import { Chance } from "chance";
 import { Expose } from "class-transformer";
 
-const mockAxios = new MockAdapter(axios);
-const chance = new Chance();
-
 describe("class: AcquireRequestExecutor", () => {
+  const axiosInstance = axios.create();
+  const mockAxios = new MockAdapter(axiosInstance);
+  const chance = new Chance();
+
   afterEach(() => {
     mockAxios.reset();
   });
@@ -40,7 +41,7 @@ describe("class: AcquireRequestExecutor", () => {
 
     it("should call axios with the correct value arguments", async () => {
       const getUser = new AcquireRequestExecutor(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const mockResponse: Partial<AxiosResponse> = {
@@ -73,7 +74,7 @@ describe("class: AcquireRequestExecutor", () => {
 
     it("should call axios with the correct function arguments", async () => {
       const getUser = new AcquireRequestExecutor<{ userId: number }>(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const mockResponse: Partial<AxiosResponse> = {
@@ -113,7 +114,7 @@ describe("class: AcquireRequestExecutor", () => {
         typeof UserDTO,
         typeof UserModel
       >(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const mockResponse: Partial<AxiosResponse> = {
@@ -148,7 +149,7 @@ describe("class: AcquireRequestExecutor", () => {
         [typeof UserDTO],
         [typeof UserModel]
       >(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const mockResponse: Partial<AxiosResponse> = {
@@ -185,9 +186,7 @@ describe("class: AcquireRequestExecutor", () => {
     });
 
     it("should forward data if no request DTO is provided", async () => {
-      const axiosInstance = axios.create();
-
-      const postSpy = jest
+      const requestSpy = jest
         .spyOn(axiosInstance, "request")
         .mockImplementationOnce(() => Promise.resolve({ data: {} }));
 
@@ -211,7 +210,7 @@ describe("class: AcquireRequestExecutor", () => {
         }
       );
 
-      expect(postSpy).toHaveBeenCalledWith(
+      expect(requestSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           data: {
             age: userFormData.age,
@@ -220,13 +219,11 @@ describe("class: AcquireRequestExecutor", () => {
         })
       );
 
-      postSpy.mockRestore();
+      requestSpy.mockRestore();
     });
 
     it("should transform the request Model instance into a DTO class instance", async () => {
-      const axiosInstance = axios.create();
-
-      const postSpy = jest
+      const requestSpy = jest
         .spyOn(axiosInstance, "request")
         .mockImplementationOnce(() => Promise.resolve({ data: {} }));
 
@@ -260,7 +257,7 @@ describe("class: AcquireRequestExecutor", () => {
         }
       );
 
-      expect(postSpy).toHaveBeenCalledWith(
+      expect(requestSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           data: {
             age: userFormData.age,
@@ -269,7 +266,225 @@ describe("class: AcquireRequestExecutor", () => {
         })
       );
 
-      postSpy.mockRestore();
+      requestSpy.mockRestore();
+    });
+
+    it("should execute the right middlewares from the instance", async () => {
+      axiosInstance.request = jest
+        .fn()
+        .mockImplementationOnce(() => Promise.resolve({ data: {} }));
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance
+      }));
+
+      const middlewareExecution = jest.fn();
+      const middlewareMocking = jest.fn();
+      const middlewareBoth = jest.fn();
+
+      getUser
+        .useOnExecution(middlewareExecution)
+        .useOnMocking(middlewareMocking)
+        .use(middlewareBoth);
+
+      await getUser({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(middlewareExecution).toHaveBeenCalled();
+      expect(middlewareMocking).not.toHaveBeenCalled();
+      expect(middlewareBoth).toHaveBeenCalled();
+    });
+
+    it("should execute the right middlewares from the config", async () => {
+      axiosInstance.request = jest
+        .fn()
+        .mockImplementationOnce(() => Promise.resolve({ data: {} }));
+
+      const middlewareExecution = jest.fn();
+      const middlewareMocking = jest.fn();
+      const middlewareBoth = jest.fn();
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance,
+        executionMiddlewares: [
+          [middlewareExecution, 0],
+          [middlewareBoth, 0]
+        ],
+        mockingMiddlewares: [
+          [middlewareMocking, 0],
+          [middlewareBoth, 0]
+        ]
+      }));
+
+      await getUser({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(middlewareExecution).toHaveBeenCalled();
+      expect(middlewareMocking).not.toHaveBeenCalled();
+      expect(middlewareBoth).toHaveBeenCalled();
+    });
+
+    it("should execute the right middlewares from both the instance and config", async () => {
+      axiosInstance.request = jest
+        .fn()
+        .mockImplementationOnce(() => Promise.resolve({ data: {} }));
+
+      const configMiddlewareExecution = jest.fn();
+      const configMiddlewareMocking = jest.fn();
+      const configMiddlewareBoth = jest.fn();
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance,
+        executionMiddlewares: [
+          [configMiddlewareExecution, 0],
+          [configMiddlewareBoth, 0]
+        ],
+        mockingMiddlewares: [
+          [configMiddlewareMocking, 0],
+          [configMiddlewareBoth, 0]
+        ]
+      }));
+
+      const instanceMiddlewareExecution = jest.fn();
+      const instanceMiddlewareMocking = jest.fn();
+      const instanceMiddlewareBoth = jest.fn();
+
+      getUser
+        .useOnExecution(instanceMiddlewareExecution)
+        .useOnMocking(instanceMiddlewareMocking)
+        .use(instanceMiddlewareBoth);
+
+      await getUser({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(configMiddlewareExecution).toHaveBeenCalled();
+      expect(configMiddlewareMocking).not.toHaveBeenCalled();
+      expect(configMiddlewareBoth).toHaveBeenCalled();
+      expect(instanceMiddlewareExecution).toHaveBeenCalled();
+      expect(instanceMiddlewareMocking).not.toHaveBeenCalled();
+      expect(instanceMiddlewareBoth).toHaveBeenCalled();
+    });
+
+    it("should call middleware with the right context arguments", async () => {
+      axiosInstance.request = jest.fn().mockImplementationOnce(() =>
+        Promise.resolve({
+          data: {
+            id: 10,
+            name: "Christian Bale",
+            age: 49
+          }
+        })
+      );
+
+      const mockInterceptor = jest.fn();
+      const mockCache = new AcquireMockCache();
+
+      const getUser = new AcquireRequestExecutor<
+        { userId: number },
+        typeof UserDTO,
+        typeof UserModel
+      >(() => ({
+        axiosInstance,
+        mockCache
+      }));
+
+      getUser.useOnExecution(mockInterceptor);
+
+      const url = (args: { userId?: number } | undefined): string =>
+        `https://example.com/user/${args?.userId}`;
+
+      await getUser(
+        {
+          request: {
+            url,
+            headers: {
+              Accept: "application/json"
+            }
+          },
+          responseMapping: {
+            DTO: UserDTO,
+            Model: UserModel
+          }
+        },
+        { userId: 10 }
+      );
+
+      expect(mockInterceptor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          response: expect.objectContaining({
+            data: {
+              id: 10,
+              name: "Christian Bale",
+              age: 49
+            }
+          }),
+          type: "execution",
+          method: "GET",
+          acquireArgs: expect.objectContaining({
+            responseMapping: {
+              DTO: UserDTO,
+              Model: UserModel
+            },
+            request: expect.objectContaining({
+              headers: {
+                Accept: "application/json"
+              },
+              url: "https://example.com/user/10"
+            })
+          }),
+          callArgs: {
+            userId: 10
+          },
+          mockCache
+        })
+      );
+    });
+
+    it.todo("should execute middleware in the correct order");
+
+    it("should allow errors to be handled by middleware", async () => {
+      axiosInstance.request = jest
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.reject(new AxiosError("Not found"))
+        );
+
+      const mockInterceptor = jest.fn();
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance
+      }));
+
+      getUser.useOnExecution(mockInterceptor);
+
+      await expect(
+        getUser({
+          request: {
+            url: "http://example.com/user/10"
+          },
+          responseMapping: {
+            DTO: UserDTO,
+            Model: UserModel
+          }
+        })
+      ).rejects.toThrow();
+
+      expect(mockInterceptor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: "Not found"
+          })
+        })
+      );
     });
   });
 
@@ -288,7 +503,7 @@ describe("class: AcquireRequestExecutor", () => {
 
     it("should call mock and not execute when the callable instance is called with mock", async () => {
       const getUsers = new AcquireRequestExecutor(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const executeSpy = jest
@@ -306,11 +521,14 @@ describe("class: AcquireRequestExecutor", () => {
 
       expect(executeSpy).not.toHaveBeenCalled();
       expect(mockSpy).toHaveBeenCalled();
+
+      executeSpy.mockRestore();
+      mockSpy.mockRestore();
     });
 
     it("should call mock and not execute when mocking is enabled", async () => {
       const getUsers = new AcquireRequestExecutor(() => ({
-        axiosInstance: axios,
+        axiosInstance,
         isMockingEnabled: true
       }));
 
@@ -329,6 +547,9 @@ describe("class: AcquireRequestExecutor", () => {
 
       expect(executeSpy).not.toHaveBeenCalled();
       expect(mockSpy).toHaveBeenCalled();
+
+      executeSpy.mockRestore();
+      mockSpy.mockRestore();
     });
 
     it("should mock DTO and Model when a DTO class is provided", async () => {
@@ -337,7 +558,7 @@ describe("class: AcquireRequestExecutor", () => {
         typeof UserDTO,
         typeof UserModel
       >(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const response = await getUser.mock({
@@ -371,7 +592,7 @@ describe("class: AcquireRequestExecutor", () => {
         [typeof UserDTO],
         [typeof UserModel]
       >(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const response = await getUsers.mock({
@@ -418,19 +639,102 @@ describe("class: AcquireRequestExecutor", () => {
       });
     });
 
-    it("should allow the mockInterceptor to be set", () => {
-      const mockInterceptor = jest.fn();
-
-      const requestExecutor = new AcquireRequestExecutor(() => ({
-        axiosInstance: axios
+    it("should execute the right middlewares from the instance", async () => {
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance
       }));
 
-      requestExecutor.setMockInterceptor(mockInterceptor);
+      const middlewareExecution = jest.fn();
+      const middlewareMocking = jest.fn();
+      const middlewareBoth = jest.fn();
 
-      expect(requestExecutor["mockInterceptor"]).toBeDefined();
+      getUser
+        .useOnExecution(middlewareExecution)
+        .useOnMocking(middlewareMocking)
+        .use(middlewareBoth);
+
+      await getUser.mock({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(middlewareExecution).not.toHaveBeenCalled();
+      expect(middlewareMocking).toHaveBeenCalled();
+      expect(middlewareBoth).toHaveBeenCalled();
     });
 
-    it("should call the mockInterceptor with the right context arguments", async () => {
+    it("should execute the right middlewares from the config", async () => {
+      const middlewareExecution = jest.fn();
+      const middlewareMocking = jest.fn();
+      const middlewareBoth = jest.fn();
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance: axios,
+        executionMiddlewares: [
+          [middlewareExecution, 0],
+          [middlewareBoth, 0]
+        ],
+        mockingMiddlewares: [
+          [middlewareMocking, 0],
+          [middlewareBoth, 0]
+        ]
+      }));
+
+      await getUser.mock({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(middlewareExecution).not.toHaveBeenCalled();
+      expect(middlewareMocking).toHaveBeenCalled();
+      expect(middlewareBoth).toHaveBeenCalled();
+    });
+
+    it("should execute the right middlewares from both the instance and config", async () => {
+      const configMiddlewareExecution = jest.fn();
+      const configMiddlewareMocking = jest.fn();
+      const configMiddlewareBoth = jest.fn();
+
+      const getUser = new AcquireRequestExecutor(() => ({
+        axiosInstance,
+        executionMiddlewares: [
+          [configMiddlewareExecution, 0],
+          [configMiddlewareBoth, 0]
+        ],
+        mockingMiddlewares: [
+          [configMiddlewareMocking, 0],
+          [configMiddlewareBoth, 0]
+        ]
+      }));
+
+      const instanceMiddlewareExecution = jest.fn();
+      const instanceMiddlewareMocking = jest.fn();
+      const instanceMiddlewareBoth = jest.fn();
+
+      getUser
+        .useOnExecution(instanceMiddlewareExecution)
+        .useOnMocking(instanceMiddlewareMocking)
+        .use(instanceMiddlewareBoth);
+
+      await getUser.mock({
+        request: {
+          url: "https://example.com/user/10"
+        }
+      });
+
+      expect(configMiddlewareExecution).not.toHaveBeenCalled();
+      expect(configMiddlewareMocking).toHaveBeenCalled();
+      expect(configMiddlewareBoth).toHaveBeenCalled();
+      expect(instanceMiddlewareExecution).not.toHaveBeenCalled();
+      expect(instanceMiddlewareMocking).toHaveBeenCalled();
+      expect(instanceMiddlewareBoth).toHaveBeenCalled();
+    });
+
+    it.todo("should execute middleware in the correct order");
+
+    it("should call middleware with the right context arguments", async () => {
       const mockInterceptor = jest.fn();
       const mockCache = new AcquireMockCache();
 
@@ -439,11 +743,11 @@ describe("class: AcquireRequestExecutor", () => {
         typeof UserDTO,
         typeof UserModel
       >(() => ({
-        axiosInstance: axios,
+        axiosInstance,
         mockCache
       }));
 
-      getUser.setMockInterceptor(mockInterceptor);
+      getUser.useOnMocking(mockInterceptor);
 
       const url = (args: { userId?: number } | undefined): string =>
         `https://example.com/user/${args?.userId}`;
@@ -466,7 +770,7 @@ describe("class: AcquireRequestExecutor", () => {
 
       expect(mockInterceptor).toHaveBeenCalledWith(
         expect.objectContaining({
-          mockResponse: expect.objectContaining({
+          response: expect.objectContaining({
             config: expect.objectContaining({
               headers: {
                 Accept: "application/json"
@@ -474,9 +778,16 @@ describe("class: AcquireRequestExecutor", () => {
               url: "https://example.com/user/10"
             }),
             status: 200,
-            statusText: "OK"
+            statusText: "OK",
+            data: {
+              id: 10,
+              name: "Christian Bale",
+              age: 49
+            }
           }),
-          args: expect.objectContaining({
+          type: "mocking",
+          method: "GET",
+          acquireArgs: expect.objectContaining({
             responseMapping: {
               DTO: UserDTO,
               Model: UserModel
@@ -505,7 +816,7 @@ describe("class: AcquireRequestExecutor", () => {
         { id: number },
         typeof MockTestDTO
       >(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       const response = await getUser.mock(
@@ -530,7 +841,7 @@ describe("class: AcquireRequestExecutor", () => {
   describe("function: isAcquireRequestExecutorInstance", () => {
     it("should return true when called with an instance of AcquireRequestExecutor", () => {
       const requestExecutor = new AcquireRequestExecutor(() => ({
-        axiosInstance: axios
+        axiosInstance
       }));
 
       expect(

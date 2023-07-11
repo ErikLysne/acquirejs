@@ -13,6 +13,14 @@ export { default as AcquireMockCache } from "./classes/AcquireMockCache.class";
 export { default as acquireMockDataStorage } from "./classes/AcquireMockDataStorage.class";
 /* -------------------------------------------------------------------------- */
 /*/
+/* -------------------------------- Constants ------------------------------- */
+export {
+  default as RequestMethod,
+  type RequestMethodType
+} from "./constants/RequestMethod.const";
+/*/
+/* -------------------------------------------------------------------------- */
+/*/
 /* ------------------------------- Decorators ------------------------------- */
 export { default as Mock } from "./decorators/mocks/Mock.decorator";
 export { default as MockDTO } from "./decorators/mocks/MockDTO.decorator";
@@ -67,11 +75,19 @@ export { default as transform } from "./functions/transform.function";
 /*/
 /* ------------------------------- Interfaces ------------------------------- */
 export type { AcquireArgs } from "./interfaces/AcquireArgs.interface";
-export type { AcquireMockContext } from "./interfaces/AcquireMockContext.interface";
+export type { AcquireCallArgs } from "./interfaces/AcquireCallArgs.interface";
+export type { AcquireContext } from "./interfaces/AcquireContext.interface";
+export type {
+  AcquireMiddleware,
+  AcquireMiddlewareClass,
+  AcquireMiddlewareFn,
+  AcquireMiddlewareWithOrder
+} from "./interfaces/AcquireMiddleware.interface";
 export type { AcquireMockGenerator } from "./interfaces/AcquireMockGenerator.interface";
 export type { AcquireRequestOptions } from "./interfaces/AcquireRequestOptions.interface";
-export type { AcquireResult } from "./interfaces/AcquireResult.interface";
+export type { AcquireTransformerOptions } from "./interfaces/AcquireTransformerOptions.interface";
 export type { ClassConstructor } from "./interfaces/ClassConstructor.interface";
+export type { ClassOrClassArray } from "./interfaces/ClassOrClassArray.interface";
 export type { InstanceOrInstanceArray } from "./interfaces/InstanceOrInstanceArray.interface";
 export type {
   JSONArray,
@@ -79,4 +95,10 @@ export type {
   JSONValue
 } from "./interfaces/JSON.interface";
 export type { LogLevel, Logger, LoggerFn } from "./interfaces/Logger.interface";
+export type { OmitFirstArg } from "./interfaces/OmitFirstArg.interface";
 export type { ValueOrCallback } from "./interfaces/ValueOrCallback.interface";
+/* -------------------------------------------------------------------------- */
+/*/
+/* ------------------------------- Middleware ------------------------------- */
+export { default as AcquireRequestLogger } from "./middleware/AcquireRequestLogger";
+/* -------------------------------------------------------------------------- */

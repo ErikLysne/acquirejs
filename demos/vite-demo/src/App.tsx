@@ -4,6 +4,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { ThemeProvider } from "@mui/material/styles";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import React from "react";
 import { BrowserRouter, Link } from "react-router-dom";
 import MockSwitch from "./components/MockSwitch";
@@ -15,6 +16,7 @@ import theme from "./theme/theme";
 function App(): React.ReactElement {
   return (
     <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools />
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <AcquireMockProvider>

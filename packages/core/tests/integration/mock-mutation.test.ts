@@ -2,11 +2,13 @@ import { Acquire } from "@/classes/Acquire.class";
 import AcquireMockCache from "@/classes/AcquireMockCache.class";
 import Mock from "@/decorators/mocks/Mock.decorator";
 import MockID from "@/decorators/mocks/MockID.decorator";
+import isPlainObject from "@tests/testing-utils/isPlainObject.function";
 import { Chance } from "chance";
 import { Expose } from "class-transformer";
 
 describe("setup of mutation endpoint", () => {
   it("should correctly allow mutations to be mocked", async () => {
+    /* ---------------------------------- Setup --------------------------------- */
     const chance = new Chance();
 
     class PostDTO {
@@ -35,6 +37,9 @@ describe("setup of mutation endpoint", () => {
     const acquire = new Acquire().useMockCache(mockCache).enableMocking();
 
     await mockCache.fill(PostDTO, 15);
+    /* -------------------------------------------------------------------------- */
+
+    /* ---------------------------- Define API method --------------------------- */
 
     const createPost = acquire({
       request: {
@@ -51,18 +56,24 @@ describe("setup of mutation endpoint", () => {
       }
     });
 
-    createPost.setMockInterceptor(async ({ mockResponse, mockCache }) => {
-      const data = mockResponse.config?.data;
+    /* -------------------------------------------------------------------------- */
 
-      const dbSimulator = mockCache?.createDatabaseSimulator(PostDTO);
-      const id = dbSimulator?.generateNextID();
+    /* ---------------------------- Setup mock logic ---------------------------- */
+
+    createPost.use(({ response, mockCache }) => {
+      const data = response.config?.data;
+
+      const dbSimulator = mockCache!.createDatabaseSimulator(PostDTO);
+      const id = dbSimulator.generateNextID();
       const newPost = { ...data, id };
-      dbSimulator?.create(newPost);
+      dbSimulator.create(newPost);
 
-      mockResponse.data = newPost;
-
-      return Promise.resolve(mockResponse);
+      response.data = newPost;
     });
+
+    /* -------------------------------------------------------------------------- */
+
+    /* ------------------------------ Test function ----------------------------- */
 
     const response = await createPost({
       data: {
@@ -71,6 +82,7 @@ describe("setup of mutation endpoint", () => {
       }
     });
 
+    expect(isPlainObject(response.response.data));
     expect(response.model).toBeInstanceOf(PostModel);
     expect(response.model.title).toEqual("My title");
     expect(response.model.text).toEqual("My text");

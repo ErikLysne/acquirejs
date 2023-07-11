@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-
 import { AcquireCallArgs } from "./AcquireCallArgs.interface";
 import { AcquireRequestOptions } from "./AcquireRequestOptions.interface";
 import { ClassOrClassArray } from "./ClassOrClassArray.interface";
@@ -12,8 +11,8 @@ export interface AcquireArgs<
   TRequestModel extends ClassOrClassArray = never,
   TRequestOptionsValueOnly extends boolean = false
 > {
+  request: AcquireRequestOptions<TCallArgs, TRequestOptionsValueOnly>;
   callArgs?: TCallArgs;
-  request?: AcquireRequestOptions<TCallArgs, TRequestOptionsValueOnly>;
   requestMapping?: {
     DTO?: TRequestDTO;
     Model?: TRequestModel;

@@ -1,22 +1,22 @@
-import RequestMethod, {
-  RequestMethodType
-} from "@/constants/RequestMethod.const";
+import { RequestMethodType } from "@/constants/RequestMethod.const";
 import generateMock from "@/functions/generateMock.function";
 import resolveValueOrCallback from "@/functions/resolveValueOrCallback.function";
 import transform from "@/functions/transform.function";
 import unwrapClassOrClassArray from "@/functions/unwrapClassArray.function";
+import isAcquireMiddlewareClass from "@/guards/isAcquireMiddleware.guard";
 import { AcquireArgs } from "@/interfaces/AcquireArgs.interface";
 import { AcquireCallArgs } from "@/interfaces/AcquireCallArgs.interface";
-import { AcquireMockContext } from "@/interfaces/AcquireMockContext.interface";
-import { AcquireMockInterceptor } from "@/interfaces/AcquireMockInterceptor.interface";
+import { AcquireContext } from "@/interfaces/AcquireContext.interface";
+import {
+  AcquireMiddleware,
+  AcquireMiddlewareFn,
+  AcquireMiddlewareWithOrder
+} from "@/interfaces/AcquireMiddleware.interface";
 import { AcquireRequestOptions } from "@/interfaces/AcquireRequestOptions.interface";
-import { AcquireResult } from "@/interfaces/AcquireResult.interface";
 import { ClassOrClassArray } from "@/interfaces/ClassOrClassArray.interface";
 import { InstanceOrInstanceArray } from "@/interfaces/InstanceOrInstanceArray.interface";
-import { Logger } from "@/interfaces/Logger.interface";
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { instanceToPlain } from "class-transformer";
-import AcquireLogger, { AcquireLogColor } from "./AcquireLogger.class";
 import AcquireMockCache from "./AcquireMockCache.class";
 import { CallableInstance } from "./CallableInstance.class";
 
@@ -42,10 +42,20 @@ export interface AcquireRequestExecutor<
 
 export type AcquireRequestExecutorGetConfig = () => {
   axiosInstance: AxiosInstance;
-  logger?: Logger;
+  executionMiddlewares?: AcquireMiddlewareWithOrder[];
+  mockingMiddlewares?: AcquireMiddlewareWithOrder[];
   mockCache?: AcquireMockCache;
   isMockingEnabled?: boolean;
 };
+
+export interface AcquireResult<
+  TResponseDTO extends ClassOrClassArray | undefined,
+  TResponseModel extends ClassOrClassArray | undefined
+> {
+  response: AxiosResponse;
+  dto: InstanceOrInstanceArray<TResponseDTO>;
+  model: InstanceOrInstanceArray<TResponseModel>;
+}
 
 export class AcquireRequestExecutor<
   TCallArgs extends AcquireCallArgs = object,
@@ -55,15 +65,8 @@ export class AcquireRequestExecutor<
   TRequestModel extends ClassOrClassArray = any
 > extends CallableInstance {
   private __isAcquireRequestExecutorInstance = true;
-  private mockInterceptor:
-    | AcquireMockInterceptor<
-        TCallArgs,
-        TResponseDTO,
-        TResponseModel,
-        TRequestDTO,
-        TRequestModel
-      >
-    | undefined;
+  private executionMiddlewares: AcquireMiddlewareWithOrder[] = [];
+  private mockingMiddlewares: AcquireMiddlewareWithOrder[] = [];
 
   constructor(private getConfig: AcquireRequestExecutorGetConfig) {
     super((...args: any[]) => {
@@ -82,6 +85,28 @@ export class AcquireRequestExecutor<
       ?.__isAcquireRequestExecutorInstance;
   }
 
+  public use(middleware: AcquireMiddleware, order = 0): this {
+    this.executionMiddlewares.push([middleware, order]);
+    this.mockingMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public useOnExecution(middleware: AcquireMiddleware, order = 0): this {
+    this.executionMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public useOnMocking(middleware: AcquireMiddleware, order = 0): this {
+    this.mockingMiddlewares.push([middleware, order]);
+    return this;
+  }
+
+  public clearMiddlewares(): this {
+    this.executionMiddlewares = [];
+    this.mockingMiddlewares = [];
+    return this;
+  }
+
   public async execute(
     acquireArgs: AcquireArgs<
       TCallArgs,
@@ -93,16 +118,20 @@ export class AcquireRequestExecutor<
     >,
     callArgs?: TCallArgs & { data?: InstanceOrInstanceArray<TRequestModel> }
   ): Promise<AcquireResult<TResponseDTO, TResponseModel>> {
-    const { request, responseMapping, requestMapping, axiosConfig } =
-      acquireArgs;
-    const { axiosInstance, logger, isMockingEnabled } = this.getConfig();
+    const {
+      request,
+      responseMapping = {},
+      requestMapping = {},
+      axiosConfig = {}
+    } = acquireArgs;
+    const { axiosInstance, mockCache, isMockingEnabled } = this.getConfig();
 
     if (isMockingEnabled) {
       return this.mock(acquireArgs, callArgs);
     }
 
     let requestData = callArgs?.data;
-    if (requestMapping && requestMapping.DTO && callArgs?.data) {
+    if (requestMapping.DTO && callArgs?.data) {
       const plainData = instanceToPlain(callArgs.data);
 
       requestData = transform(plainData, requestMapping.DTO, {
@@ -110,36 +139,61 @@ export class AcquireRequestExecutor<
       });
     }
 
-    const requestConfig = request
-      ? this.resolveRequestConfig(request, callArgs, axiosConfig)
-      : {};
+    const { request: _request, ...rest } = acquireArgs ?? {};
+    const requestConfig = (
+      request ? this.resolveRequestConfig(request, callArgs, axiosConfig) : {}
+    ) as AxiosRequestConfig & { method: RequestMethodType };
 
-    let response: AxiosResponse;
+    let response = null;
+
+    function preventMockDataGeneration(): void {}
+    function mockDataGenerationPrevented(): boolean {
+      return false;
+    }
+
+    const context: AcquireContext<
+      TCallArgs,
+      TResponseDTO,
+      TResponseModel,
+      TRequestDTO,
+      TRequestModel
+    > = {
+      acquireArgs: {
+        ...rest,
+        request: requestConfig
+      },
+      type: "execution",
+      method: requestConfig.method,
+      callArgs,
+      mockCache,
+      preventMockDataGeneration,
+      mockDataGenerationPrevented,
+      response: {} as AxiosResponse // The response context is handled below
+    };
 
     try {
       response = await axiosInstance.request({
         ...requestConfig,
         data: requestData
       });
-      this.logAcquireCall(
-        logger,
-        response,
-        requestConfig.method as RequestMethodType
-      );
+
+      context.response = response;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        this.logAcquireCall(
-          logger,
-          error.response ?? {},
-          requestConfig.method as RequestMethodType
-        );
+        context.error = error;
+        if (error.response) {
+          context.response = error.response;
+        }
       }
-
       throw error;
+    } finally {
+      for (const middleware of this.getMiddlewares("execution")) {
+        middleware(context);
+      }
     }
 
-    const dto = transform(response.data, responseMapping?.DTO);
-    const model = transform(response.data, responseMapping?.Model, {
+    const dto = transform(response.data, responseMapping.DTO);
+    const model = transform(response.data, responseMapping.Model, {
       excludeExtraneousValues: true
     });
 
@@ -164,20 +218,20 @@ export class AcquireRequestExecutor<
       $count?: number;
     }
   ): Promise<AcquireResult<TResponseDTO, TResponseModel>> {
-    const { request, responseMapping, requestMapping, axiosConfig } =
-      acquireArgs;
-    const { axiosInstance, logger, mockCache } = this.getConfig();
-
-    let mockDto: InstanceOrInstanceArray<TResponseDTO> | undefined = undefined;
-    let mockModel: InstanceOrInstanceArray<TResponseModel> | undefined =
-      undefined;
+    const {
+      request,
+      responseMapping = {},
+      requestMapping = {},
+      axiosConfig = {}
+    } = acquireArgs;
+    const { axiosInstance, mockCache } = this.getConfig();
 
     const requestConfig = (
       request ? this.resolveRequestConfig(request, callArgs, axiosConfig) : {}
     ) as AxiosRequestConfig & { method: RequestMethodType };
 
     let requestData = callArgs?.data;
-    if (requestMapping && requestMapping.DTO && callArgs?.data) {
+    if (requestMapping.DTO && callArgs?.data) {
       const plainData = instanceToPlain(callArgs.data);
 
       requestData = transform(plainData, requestMapping.DTO, {
@@ -202,7 +256,7 @@ export class AcquireRequestExecutor<
       return config;
     }
 
-    let mockResponse = {
+    const mockResponse = {
       config: mergeConfigObjects(axiosInstance.defaults, requestConfig, {
         data: requestData
       }),
@@ -212,84 +266,78 @@ export class AcquireRequestExecutor<
     } as Partial<AxiosResponse>;
 
     const { request: _request, ...rest } = acquireArgs ?? {};
-    const mockContext: AcquireMockContext<
+
+    let isMockDataGenerationPrevented = false;
+
+    function preventMockDataGeneration(): void {
+      isMockDataGenerationPrevented = true;
+    }
+    function mockDataGenerationPrevented(): boolean {
+      return isMockDataGenerationPrevented;
+    }
+
+    const context: AcquireContext<
       TCallArgs,
       TResponseDTO,
       TResponseModel,
       TRequestDTO,
       TRequestModel
     > = {
-      args: {
+      acquireArgs: {
         ...rest,
         request: requestConfig
       },
+      type: "mocking",
+      method: requestConfig.method,
       callArgs,
-      mockResponse,
       mockCache,
-      delay(
-        minDuration: number,
-        maxDuration: number = minDuration
-      ): Promise<void> {
-        const duration =
-          Math.random() * (maxDuration - minDuration) + minDuration;
-        return new Promise((resolve) => setTimeout(resolve, duration));
-      }
+      mockDataGenerationPrevented,
+      preventMockDataGeneration,
+      response: mockResponse as AxiosResponse
     };
 
-    if (this.mockInterceptor) {
-      mockResponse = await this.mockInterceptor(mockContext);
-    } else if (responseMapping?.DTO) {
+    for (const middleware of this.getMiddlewares("mocking")) {
+      try {
+        middleware(context);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          context.error = error;
+          if (error.response) {
+            context.response = error.response;
+          }
+        }
+      }
+    }
+
+    if (context.error) {
+      throw context.error;
+    }
+
+    if (
+      !isMockDataGenerationPrevented &&
+      !context.response.data &&
+      responseMapping.DTO
+    ) {
       const { ClassUnwrapped: DTOUnwrapped, isClassArray: isDTOArray } =
-        unwrapClassOrClassArray(responseMapping?.DTO);
+        unwrapClassOrClassArray(responseMapping.DTO);
 
       const mockResult = await (isDTOArray
-        ? generateMock(
-            DTOUnwrapped,
-            callArgs?.$count ?? 10,
-            mockCache,
-            mockContext as any
-          )
-        : generateMock(DTOUnwrapped, undefined, mockCache, mockContext as any));
+        ? generateMock(DTOUnwrapped, callArgs?.$count ?? 10, mockCache, context)
+        : generateMock(DTOUnwrapped, undefined, mockCache, context));
 
       mockResponse.data = instanceToPlain(mockResult);
     }
 
-    mockDto = transform(mockResponse?.data, responseMapping?.DTO);
-    mockModel = transform(mockResponse?.data, responseMapping?.Model, {
+    const mockDto = transform(mockResponse?.data, responseMapping.DTO);
+    const mockModel = transform(mockResponse?.data, responseMapping.Model, {
       excludeExtraneousValues: true
     });
 
-    this.logAcquireCall(
-      logger,
-      mockResponse,
-      requestConfig.method,
-      true,
-      typeof this.mockInterceptor === "function"
-    );
-
     return {
       response: mockResponse as AxiosResponse,
-      dto: mockDto!,
-      model: mockModel!
+      dto: mockDto,
+      model: mockModel
     };
-  }
-
-  public setMockInterceptor(
-    mockInterceptor: AcquireMockInterceptor<
-      TCallArgs,
-      TResponseDTO,
-      TResponseModel,
-      TRequestDTO,
-      TRequestModel
-    >
-  ): this {
-    this.mockInterceptor = mockInterceptor;
-    return this;
-  }
-
-  public clearMockInterceptor(): this {
-    delete this.mockInterceptor;
-    return this;
   }
 
   private resolveRequestConfig(
@@ -341,67 +389,42 @@ export class AcquireRequestExecutor<
     };
   }
 
-  private logAcquireCall(
-    logger?: Logger,
-    response?: Partial<AxiosResponse>,
-    method?: RequestMethodType,
-    isMocked?: boolean,
-    hasMockInterceptor?: boolean
-  ): void {
-    if (!logger || !response) {
-      return;
-    }
+  private resolveMiddlewares(
+    orderedMiddlewares: AcquireMiddlewareWithOrder[]
+  ): AcquireMiddlewareFn[] {
+    const orderedMiddlewareFns: [
+      middlewareFn: AcquireMiddlewareFn,
+      order: number
+    ][] = [];
 
-    const colorize =
-      logger instanceof AcquireLogger
-        ? AcquireLogger.colorize
-        : (message: string, ..._args: any[]): string => message;
-
-    function colorizeStatusCode(statusCode: number): AcquireLogColor {
-      const statusClass = Math.floor(statusCode / 100);
-
-      switch (statusClass) {
-        case 1: // Informational
-          return "blue";
-        case 2: // Success
-          return "green";
-        case 3: // Redirection
-          return "yellow";
-        case 4: // Client error
-          return "brightRed";
-        case 5: // Server error
-          return "red";
-        default: // Unknown status code
-          return "gray";
+    for (const orderedMiddleware of orderedMiddlewares) {
+      const [middleware, order] = orderedMiddleware;
+      if (isAcquireMiddlewareClass(middleware)) {
+        orderedMiddlewareFns.push([
+          middleware.handle,
+          middleware.order ?? order
+        ]);
+      } else {
+        orderedMiddlewareFns.push([middleware, order]);
       }
     }
 
-    const uri = axios.getUri(response.config);
-    const urlObj = new URL(uri);
+    return orderedMiddlewareFns
+      .sort((a, b) => a[1] - b[1])
+      .map(([middlewareFn]) => middlewareFn);
+  }
 
-    const executedOrMocked = `[${
-      isMocked ? colorize("MOCKED", "yellow") : colorize("EXECUTED", "green")
-    }]`;
-    const requestMethod = method ? `[${RequestMethod[method]}]` : "";
-    const atPath = `@ ${urlObj.pathname}`;
-    const status = colorize(
-      `[${response.status}]`,
-      colorizeStatusCode(response.status ?? 200)
-    );
-    const mockSource = hasMockInterceptor
-      ? colorize("-> [FROM INTERCEPTOR]", "yellow")
-      : colorize("-> [ON DEMAND]", "yellow");
+  private getMiddlewares(mode: AcquireContext["type"]): AcquireMiddlewareFn[] {
+    if (mode === "execution") {
+      return this.resolveMiddlewares([
+        ...(this.getConfig().executionMiddlewares ?? []),
+        ...this.executionMiddlewares
+      ]);
+    }
 
-    const log = [
-      executedOrMocked,
-      requestMethod,
-      atPath,
-      status,
-      isMocked ? mockSource : ""
-    ] as const;
-
-    response.status && response.status >= 400
-      ? logger.error(...log)
-      : logger.info(...log);
+    return this.resolveMiddlewares([
+      ...(this.getConfig().mockingMiddlewares ?? []),
+      ...this.mockingMiddlewares
+    ]);
   }
 }
