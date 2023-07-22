@@ -38,27 +38,24 @@ describe("Setup of endpoint with intercepting middleware", () => {
 
     /* ---------------------------- Define API method --------------------------- */
 
-    const getUsers = acquire.withCallArgs<{
-      sortBy?: keyof UserDTO;
-      sortByDescending?: boolean;
-      search?: string;
-      minAge?: number;
-      maxAge?: number;
-    }>()({
-      request: {
-        url: "https://example.com/users",
+    const getUsers = acquire
+      .createRequestHandler()
+      .withResponseMapping([UserModel], [UserDTO])
+      .get<{
+        sortBy?: keyof UserDTO;
+        sortByDescending?: boolean;
+        search?: string;
+        minAge?: number;
+        maxAge?: number;
+      }>({
+        url: "https://api.example.com/users",
         params: (args) => ({
           sortBy: args?.sortBy,
           sortByDescending: args?.sortByDescending,
           search: args?.search,
           maxAge: args?.maxAge
         })
-      },
-      responseMapping: {
-        DTO: [UserDTO],
-        Model: [UserModel]
-      }
-    });
+      });
     /* -------------------------------------------------------------------------- */
 
     /* ---------------------------- Setup mock logic ---------------------------- */
@@ -82,7 +79,7 @@ describe("Setup of endpoint with intercepting middleware", () => {
 
     /* ------------------------------ Test function ----------------------------- */
 
-    const allUsers = await getUsers();
+    const allUsers = await getUsers({});
     expect(allUsers.model.length).toEqual(10);
 
     const searchedUsers = await getUsers({ search: "Bob" });

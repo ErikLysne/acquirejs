@@ -8,7 +8,7 @@ export default function transform<TModel = unknown>(
   Model?: TModel,
   options?: ClassTransformOptions
 ): InstanceOrInstanceArray<TModel> {
-  if (!Model) {
+  if (Model == null) {
     return data as InstanceOrInstanceArray<TModel>;
   }
 

@@ -1,8 +1,7 @@
 import type { ClassConstructor } from "./ClassConstructor.interface";
 
-export type InstanceOrInstanceArray<TTransformTarget> =
-  TTransformTarget extends ClassConstructor
-    ? InstanceType<TTransformTarget>
-    : TTransformTarget extends [classConstructor: ClassConstructor]
-    ? InstanceType<TTransformTarget[0]>[]
-    : TTransformTarget;
+export type InstanceOrInstanceArray<TTarget> = TTarget extends ClassConstructor
+  ? InstanceType<TTarget>
+  : TTarget extends [classConstructor: ClassConstructor]
+  ? InstanceType<TTarget[0]>[]
+  : TTarget;

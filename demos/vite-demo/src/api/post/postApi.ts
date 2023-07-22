@@ -4,40 +4,30 @@ import { PostDTO } from "./dtos/PostDTO";
 import { CreatePostModel } from "./models/CreatePostModel";
 import { PostModel } from "./models/PostModel";
 
-export const getPosts = acquire.withCallArgs<{
-  page?: number;
-  limit?: number;
-  sort?: keyof PostDTO;
-  order?: "asc" | "desc";
-  userId?: number;
-}>()({
-  request: {
+export const getPosts = acquire
+  .createRequestHandler()
+  .withResponseMapping([PostModel], [PostDTO])
+  .get<{
+    page?: number;
+    limit?: number;
+    sort?: keyof PostDTO;
+    order?: "asc" | "desc";
+    userId?: number;
+  }>({
     path: "/posts",
-    params: (args) => ({
-      _page: args?.page,
-      _limit: args?.limit,
-      _sort: args?.sort,
-      _order: args?.order,
-      userId: args?.userId
+    params: ({ page, limit, sort, order, userId }) => ({
+      _page: page,
+      _limit: limit,
+      _sort: sort,
+      _order: order,
+      userId: userId
     })
-  },
-  responseMapping: {
-    DTO: [PostDTO],
-    Model: [PostModel]
-  }
-});
+  });
 
-export const createPost = acquire({
-  request: {
-    path: "/posts",
-    method: "POST"
-  },
-  requestMapping: {
-    DTO: CreatePostDTO,
-    Model: CreatePostModel
-  },
-  responseMapping: {
-    DTO: PostDTO,
-    Model: PostModel
-  }
-});
+export const createPost = acquire
+  .createRequestHandler()
+  .withRequestMapping(CreatePostModel, CreatePostDTO)
+  .withResponseMapping(PostModel, PostDTO)
+  .post({
+    path: "/posts"
+  });

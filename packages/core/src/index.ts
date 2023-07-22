@@ -8,9 +8,22 @@ export * from "class-transformer";
 /*/
 /* --------------------------------- Classes -------------------------------- */
 export { Acquire } from "./classes/Acquire.class";
-export { default as AcquireLogger } from "./classes/AcquireLogger.class";
+export {
+  type AcquireMiddleware,
+  type AcquireMiddlewareClass,
+  type AcquireMiddlewareFn
+} from "./classes/AcquireBase.class";
+export {
+  default as AcquireLogger,
+  type AcquireLogColor,
+  type AcquireLoggerOptions
+} from "./classes/AcquireLogger.class";
 export { default as AcquireMockCache } from "./classes/AcquireMockCache.class";
 export { default as acquireMockDataStorage } from "./classes/AcquireMockDataStorage.class";
+export {
+  type AcquireRequestHandlerConfig,
+  type AcquireResult
+} from "./classes/AcquireRequestHandler.class";
 /* -------------------------------------------------------------------------- */
 /*/
 /* -------------------------------- Constants ------------------------------- */
@@ -74,31 +87,35 @@ export { default as transform } from "./functions/transform.function";
 /* -------------------------------------------------------------------------- */
 /*/
 /* ------------------------------- Interfaces ------------------------------- */
-export type { AcquireArgs } from "./interfaces/AcquireArgs.interface";
-export type { AcquireCallArgs } from "./interfaces/AcquireCallArgs.interface";
-export type { AcquireContext } from "./interfaces/AcquireContext.interface";
-export type {
-  AcquireMiddleware,
-  AcquireMiddlewareClass,
-  AcquireMiddlewareFn,
-  AcquireMiddlewareWithOrder
-} from "./interfaces/AcquireMiddleware.interface";
-export type { AcquireMockGenerator } from "./interfaces/AcquireMockGenerator.interface";
-export type { AcquireRequestOptions } from "./interfaces/AcquireRequestOptions.interface";
-export type { AcquireTransformerOptions } from "./interfaces/AcquireTransformerOptions.interface";
-export type { ClassConstructor } from "./interfaces/ClassConstructor.interface";
-export type { ClassOrClassArray } from "./interfaces/ClassOrClassArray.interface";
-export type { InstanceOrInstanceArray } from "./interfaces/InstanceOrInstanceArray.interface";
-export type {
-  JSONArray,
-  JSONObject,
-  JSONValue
+export { type AcquireCallArgs } from "./interfaces/AcquireCallArgs.interface";
+export { type AcquireContext } from "./interfaces/AcquireContext.interface";
+export { type AcquireMockGenerator } from "./interfaces/AcquireMockGenerator.interface";
+export { type AcquireRequestConfig } from "./interfaces/AcquireRequestConfig.interface";
+export { type AcquireTransformerOptions } from "./interfaces/AcquireTransformerOptions.interface";
+export { type ClassConstructor } from "./interfaces/ClassConstructor.interface";
+export { type ClassOrClassArray } from "./interfaces/ClassOrClassArray.interface";
+export { type InstanceOrInstanceArray } from "./interfaces/InstanceOrInstanceArray.interface";
+export {
+  type JSONArray,
+  type JSONObject,
+  type JSONValue
 } from "./interfaces/JSON.interface";
-export type { LogLevel, Logger, LoggerFn } from "./interfaces/Logger.interface";
-export type { OmitFirstArg } from "./interfaces/OmitFirstArg.interface";
-export type { ValueOrCallback } from "./interfaces/ValueOrCallback.interface";
+export {
+  type LogLevel,
+  type Logger,
+  type LoggerFn
+} from "./interfaces/Logger.interface";
+export { type ValueOrCallback } from "./interfaces/ValueOrCallback.interface";
 /* -------------------------------------------------------------------------- */
 /*/
 /* ------------------------------- Middleware ------------------------------- */
-export { default as AcquireRequestLogger } from "./middleware/AcquireRequestLogger";
+export {
+  default as DelaySimulator,
+  type DelaySimulatorLimit,
+  type DelaySimulatorOptions
+} from "./middleware/DelaySimulator.middleware";
+export {
+  default as RequestLogger,
+  type RequestLoggerOptions
+} from "./middleware/RequestLogger.middleware";
 /* -------------------------------------------------------------------------- */
