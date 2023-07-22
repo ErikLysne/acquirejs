@@ -1,5 +1,11 @@
 # @acquirejs/core
 
+## 0.3.1
+
+### Patch Changes
+
+- 88cbf84: Removed reflect-metadata import from core package
+
 ## 0.3.0
 
 ### Minor Changes
