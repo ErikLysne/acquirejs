@@ -41,20 +41,11 @@ describe("setup of mutation endpoint", () => {
 
     /* ---------------------------- Define API method --------------------------- */
 
-    const createPost = acquire({
-      request: {
-        url: "https://www.example.com/users",
-        method: "POST"
-      },
-      requestMapping: {
-        DTO: CreatePostDTO,
-        Model: CreatePostModel
-      },
-      responseMapping: {
-        DTO: PostDTO,
-        Model: PostModel
-      }
-    });
+    const createPost = acquire
+      .createRequestHandler()
+      .withRequestMapping(CreatePostModel, CreatePostDTO)
+      .withResponseMapping(PostModel, PostDTO)
+      .post({ url: "https://api.example.com/users" });
 
     /* -------------------------------------------------------------------------- */
 
@@ -75,17 +66,17 @@ describe("setup of mutation endpoint", () => {
 
     /* ------------------------------ Test function ----------------------------- */
 
-    const response = await createPost({
+    const { response, model } = await createPost({
       data: {
         title: "My title",
         text: "My text"
       }
     });
 
-    expect(isPlainObject(response.response.data));
-    expect(response.model).toBeInstanceOf(PostModel);
-    expect(response.model.title).toEqual("My title");
-    expect(response.model.text).toEqual("My text");
-    expect(response.model.id).toEqual(16);
+    expect(isPlainObject(response.data));
+    expect(model).toBeInstanceOf(PostModel);
+    expect(model.title).toEqual("My title");
+    expect(model.text).toEqual("My text");
+    expect(model.id).toEqual(16);
   });
 });

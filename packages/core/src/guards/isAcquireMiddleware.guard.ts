@@ -1,4 +1,4 @@
-import { AcquireMiddlewareClass } from "@/interfaces/AcquireMiddleware.interface";
+import { AcquireMiddlewareClass } from "@/classes/AcquireBase.class";
 
 export default function isAcquireMiddlewareClass(
   obj: any

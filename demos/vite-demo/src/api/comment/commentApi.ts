@@ -4,36 +4,26 @@ import { CreateCommentDTO } from "./dtos/CreateCommentDTO";
 import { CommentModel } from "./models/CommentModel";
 import { CreateCommentModel } from "./models/CreateCommentModel";
 
-export const getComments = acquire.withCallArgs<{
-  postId?: number;
-  sort?: keyof CommentDTO;
-  order?: "asc" | "desc";
-}>()({
-  request: {
+export const getComments = acquire
+  .createRequestHandler()
+  .withResponseMapping([CommentModel], [CommentDTO])
+  .get<{
+    postId?: number;
+    sort?: keyof CommentDTO;
+    order?: "asc" | "desc";
+  }>({
     path: "/comments",
-    params: (args) => ({
-      postId: args?.postId,
-      _sort: args?.sort,
-      _order: args?.order
+    params: ({ postId, sort, order }) => ({
+      postId: postId,
+      _sort: sort,
+      _order: order
     })
-  },
-  responseMapping: {
-    DTO: [CommentDTO],
-    Model: [CommentModel]
-  }
-});
+  });
 
-export const createComment = acquire({
-  request: {
-    path: "/comments",
-    method: "POST"
-  },
-  requestMapping: {
-    DTO: CreateCommentDTO,
-    Model: CreateCommentModel
-  },
-  responseMapping: {
-    DTO: CommentDTO,
-    Model: CommentModel
-  }
-});
+export const createComment = acquire
+  .createRequestHandler()
+  .withRequestMapping(CreateCommentModel, CreateCommentDTO)
+  .withResponseMapping(CommentModel, CommentDTO)
+  .post({
+    path: "/comments"
+  });

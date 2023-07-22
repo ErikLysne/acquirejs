@@ -11,8 +11,8 @@ type ForwardedAxiosRequestConfigKeys =
   | "timeout"
   | "timeoutErrorMessage";
 
-export type AcquireRequestOptions<
-  TCallArgs = any,
+export type AcquireRequestConfig<
+  TCallArgs,
   TValueOnly extends boolean = false
 > = {
   [Key in ForwardedAxiosRequestConfigKeys]?: ValueOrCallback<
@@ -24,4 +24,5 @@ export type AcquireRequestOptions<
   path?: ValueOrCallback<AxiosRequestConfig["url"], TCallArgs, TValueOnly>;
   params?: ValueOrCallback<Record<string, any>, TCallArgs, TValueOnly>;
   method?: ValueOrCallback<RequestMethodType, TCallArgs, TValueOnly>;
+  axiosConfig?: AxiosRequestConfig;
 };

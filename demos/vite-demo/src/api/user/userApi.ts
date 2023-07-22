@@ -2,22 +2,16 @@ import acquire from "../acquire";
 import { UserDTO } from "./dtos/UserDTO";
 import { UserModel } from "./models/UserModel";
 
-export const getUsers = acquire({
-  request: {
+export const getUsers = acquire
+  .createRequestHandler()
+  .withResponseMapping([UserModel], [UserDTO])
+  .get({
     path: "/users"
-  },
-  responseMapping: {
-    DTO: [UserDTO],
-    Model: [UserModel]
-  }
-});
+  });
 
-export const getUser = acquire.withCallArgs<{ userId: number }>()({
-  request: {
-    path: (args) => `/users/${args?.userId}`
-  },
-  responseMapping: {
-    DTO: UserDTO,
-    Model: UserModel
-  }
-});
+export const getUser = acquire
+  .createRequestHandler()
+  .withResponseMapping(UserModel, UserDTO)
+  .get<{ userId: number }>({
+    path: ({ userId }) => `/users/${userId}`
+  });

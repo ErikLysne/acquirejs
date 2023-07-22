@@ -1,18 +1,14 @@
-import {
-  Acquire,
-  AcquireMockCache,
-  AcquireRequestLogger
-} from "@acquirejs/core";
+import { Acquire, AcquireMockCache, RequestLogger } from "@acquirejs/core";
 import axios from "axios";
-
-const axiosInstance = axios.create({
-  baseURL: "https://jsonplaceholder.typicode.com"
-});
 
 export const mockCache = new AcquireMockCache();
 
-const acquire = new Acquire(axiosInstance)
+const acquire = new Acquire(
+  axios.create({
+    baseURL: "https://jsonplaceholder.typicode.com"
+  })
+)
   .useMockCache(mockCache)
-  .use(new AcquireRequestLogger());
+  .use(new RequestLogger());
 
 export default acquire;

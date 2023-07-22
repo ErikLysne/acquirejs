@@ -8,9 +8,9 @@
 
 AcquireJS is a TypeScript library designed to streamline the process of working with REST APIs. The library aims to solve three common pain-points in the data fetching/mutation process:
 
-- 🔒 <b>Type safety</b> - Ensure that data going into and out of your application from external APIs is type safe.
+- 🔒 <b>Type safety</b> - Ensure that data going into and out of your application from REST APIs is type safe.
 
-- 🗺️ <b>Data mapping</b> - Decide how data going into and out of your application from external APIs should be mapped, using a declarative approach.
+- 🗺️ <b>Data mapping</b> - Decide how data going into and out of your application from REST APIs should be mapped, using a declarative approach.
 
 - 🎭 <b>Mocking and testing</b> - Easily mock data and API responses in order to test your code. Mock Data Transfer Objects (DTOs) to write unit tests at the function and component level, mock API calls to write integration tests at the page level or mock API calls with relational data to write End-to-End (E2E) tests at the application level.
 
@@ -55,6 +55,18 @@ yarn add @acquirejs/core reflect-metadata
 ```
 
 > 💡 <b>Tip:</b> AcquireJS is built on [axios](https://axios-http.com/docs/intro). If you want to specify an axios config, you should also install axios.
+>
+> Using npm:
+>
+> ```bash
+> npm install axios
+> ```
+>
+> Using yarn:
+>
+> ```bash
+> yarn add axios
+> ```
 
 ---
 
@@ -122,7 +134,7 @@ This will allow multiple requests to share the same default settings, like base 
 
 A key concept in AcquireJS is to use two sets of classes for each endpoint: A <b>DTO</b> class and a <b>Model</b> class. The DTO (Data Transfer Object) is a class representing the data as delivered from or to the server. It should only contain JSON primitive values.
 
-Imagine an example endpoint (`http://api.example.com/users/1`) that returns a user JSON response that looks like this:
+Imagine an example endpoint (`http://api.example.com/users/1`) that returns a user JSON response in the following format:
 
 ```json
 {
@@ -200,29 +212,23 @@ import acquire from "../../acquire.ts";
 import UserDTO from "./dtos/UserDTO.ts";
 import UserModel from "./models/UserModel.ts";
 
-export const getUser = acquire({
-  request: {
+export const getUser = acquire
+  .createRequestHandler()
+  .withResponseMapping(UserModel, UserDTO)
+  .get({
     url: "http://api.example.com/users/1"
-  },
-  responseMapping: {
-    DTO: UserDTO,
-    Model: UserModel
-  }
-});
+  });
 ```
 
 > 💡 <b>Tip:</b> If you instantiated `Acquire` using an `axios` instance with a `baseURL` of `http://api.example.com/`, you could instead just set the `path`:
 >
 > ```typescript
-> export const getUser = acquire({
->   request: {
+> export const getUser = acquire
+>   .createRequestHandler()
+>   .withResponseMapping(UserModel, UserDTO)
+>   .get({
 >     path: "/users/1"
->   },
->   responseMapping: {
->     DTO: UserDTO,
->     Model: UserModel
->   }
-> });
+>   });
 > ```
 
 ### Calling the request executor
@@ -230,7 +236,7 @@ export const getUser = acquire({
 The request can now be executed:
 
 ```typescript
-import { getUser } from "path/to/getUser";
+import { getUser } from "path-to-getUser";
 
 const user = await getUser();
 
@@ -247,27 +253,24 @@ Here, `user.model` is typed and mapped according to the `UserModel` class! 🎉
 
 ### Using dynamic request arguments
 
-In the previous example, the ID of the user was hard-coded into the url, causing `getUser` to always return the user with ID 1. This was only shown as a simplistic example, but in general, the ID should be passed as an argument to the `getUser` method. This can be done by passing an object with a `userId` key to the `getUser` method. All properties on the `request` object can be set as values or callbacks that take `callArgs` as the argument. The type of `callArgs` can be set by binding `callArgs` to the method using the `withCallArgs` method on the `Acquire` instance:
+In the previous example, the ID of the user was hard-coded into the url, causing `getUser` to always return the user with ID 1. This was only shown as a simplistic example, but in general, the ID should be passed as an argument to the `getUser` method.
+
+Setting dynamic request parameters can be done by passing a generic type (`TCallArgs`) to the `get` method. The generic type must extend an object and will be required when calling the `getUser` function. All request configuration properties can be set as values or callbacks that take `TCallArgs` as the argument. In the following example, the `userId` is injected into the path of the url:
 
 ```typescript
-export const getUser = acquire.withCallArgs<{ userId: number }>()({
-  request: {
-    url: (callArgs) => `http://api.example.com/users/${callArgs?.userId}`
-  },
-  responseMapping: {
-    DTO: UserDTO,
-    Model: UserModel
-  }
-});
+export const getUser = acquire
+  .createRequestHandler()
+  .withResponseMapping(UserModel, UserDTO)
+  .get<{ userId: number }>({
+    url: ({ userId }) => `http://api.example.com/users/${userId}`
+  });
 ```
 
-And calling the method like so:
+`getUser` is then called like so:
 
 ```typescript
-const user = await getUser({ userId: 10 });
+const { model: user } = await getUser({ userId: 10 });
 ```
-
-> 🔍 <b>Caveat:</b> Note that when using `withCallArgs`, the function is curried. Don't forget the additional set of parenthesis!
 
 ---
 
@@ -276,15 +279,12 @@ const user = await getUser({ userId: 10 });
 Endpoints that return lists of items typically return a JSON array response. When working with endpoints that directly return arrays, the DTO and Model can be wrapped in an array:
 
 ```typescript
-export const getUsers = acquire({
-  request: {
+export const getUsers = acquire
+  .createRequestHandler()
+  .withResponseMapping([UserModel], [UserDTO]) // 👈 notice the square brackets!
+  .get({
     url: "http://api.example.com/users"
-  },
-  responseMapping: {
-    DTO: [UserDTO],
-    Model: [UserModel]
-  }
-});
+  });
 ```
 
 Now, the return type of `getUsers` has `model` typed as a `UserModel[]` and `dto` as `UserDTO[]`.
@@ -293,7 +293,7 @@ Now, the return type of `getUsers` has `model` typed as a `UserModel[]` and `dto
 
 ### Mutations
 
-AcquireJS can also perform mutations. In this case, the request `method` can be specified in the `request` argument. Additionally, a `requestMapping` can be provided, similar to the `responseMapping`. In general, the DTO used for queries and mutations may differ. For instance, the `UserDTO` in the previous example has information about the ID of the user, if the user is currently active, as well as when the user was created, last updated and last active. While this information is not included in the body of a `POST` request, it may appear in the response of the request. Hence, separate `CreateUserDTO` and `CreateUserModel` classes can be created to deal with the outgoing data:
+AcquireJS can also perform mutations. In this case, a request method other than `get` (e.g., `put`, `post`, `delete`) can be used as the final function to end the chaining. Additionally, a `withRequestMapping` can be provided, similar to the `withResponseMapping`. In general, the DTO used for queries and mutations may differ. For instance, the `UserDTO` in the previous example has information about the ID of the user, if the user is currently active, as well as when the user was created, last updated and last active. While this information is not included in the body of a `post` request, it may appear in the response of the same request. Hence, separate `CreateUserDTO` and `CreateUserModel` classes can be created to deal with the outgoing data:
 
 ```typescript
 // src/api/users/dtos/CreateUserDTO.ts
@@ -338,22 +338,22 @@ import CreateUserDTO from "./dtos/CreateUserDTO.ts";
 import UserModel from "./models/UserModel.ts";
 import CreateUserModel from "./models/CreateUserModel.ts";
 
-export const getUser = acquire(/* From the previous example...*/);
+// From the previous example...
+export const getUser = acquire
+  .createRequestHandler()
+  .withResponseMapping(UserModel, UserDTO)
+  .get<{ userId: number }>({
+    url: ({ userId }) => `http://api.example.com/users/${userId}`
+  });
 
-export const createUser = acquire({
-  request: {
-    url: "http://api.example.com/users",
-    method: "POST"
-  },
-  requestMapping: {
-    DTO: CreateUserDTO,
-    Model: CreateUserModel
-  },
-  responseMapping: {
-    DTO: UserDTO,
-    Model: UserModel
-  }
-});
+// Adding a mutation
+export const createUser = acquire
+  .createRequestHandler()
+  .withRequestMapping(CreateUserModel, CreateUserDTO)
+  .withResponseMapping(UserModel, UserDTO)
+  .post({
+    url: "http://api.example.com/users"
+  });
 ```
 
 To pass this data to the `createUser` method, `data` can be set in the argument:
@@ -366,7 +366,7 @@ const user = await createUser({
     email: "janedoe@example.com",
     phoneNumber: "+1987654321",
     role: "basic-user"
-  }
+  } // 👈 The type of `data` is dictated by `CreateUserModel`
 });
 ```
 
@@ -385,9 +385,9 @@ In the examples above, the `UserDTO` class was always specified, but was not rea
 > 💡 <b>Tip:</b> To see if a request is executed or mocked, and to see if the mocking is <i>on demand</i> or <i>from interceptors</i>, you can attach a logger to the `Acquire` instance:
 >
 > ```typescript
-> import { Acquire, AcquireRequestLogger } from "@acquirejs/core";
+> import { Acquire, RequestLogger } from "@acquirejs/core";
 >
-> const acquire = new Acquire().use(new AcquireRequestLogger());
+> const acquire = new Acquire().use(new RequestLogger());
 >
 > export default acquire;
 > ```
@@ -500,10 +500,10 @@ When mocking an AcquireJS request, no actual network request is executed. Instea
 
    This is mostly useful when writing simple unit tests, but is not that suited for testing components that fetch data, as it requires us to modify how the function is called.
 
-   > 💡 <b>Tip:</b> When calling a request executor function using `.mock()`, you can (in addition to the `callArgs`) provide a `$count` argument, i.e.,
+   > 💡 <b>Tip:</b> When calling a request executor function using `.mock()`, the final argument passed to the function is the generated data count:
    >
    > ```typescript
-   > const users = await getUsers.mock({ $count: 100 });
+   > const users = await getUsers.mock(100);
    > ```
    >
    > This will decide how many objects are returned for functions that return arrays (in this case, 100 mock users are generated). The default count is 10.
@@ -511,7 +511,7 @@ When mocking an AcquireJS request, no actual network request is executed. Instea
 2. <b>Enable mocking globally:</b>
 
    ```typescript
-   import acquire from "path/to/acquire";
+   import acquire from "path-to-acquire";
 
    acquire.enableMocking();
    // or
@@ -640,28 +640,19 @@ import acquire from "../../acquire.ts";
 import PostDTO from "./dtos/PostDTO.ts";
 import PostModel from "./models/PostModel.ts";
 
-export const getPosts = acquire.withCallArgs<{
-  createdByUserId?: number;
-  page?: number;
-  pageSize?: number;
-  sortBy?: keyof PostDTO;
-  sortByDescending?: boolean;
-}>()({
-  request: {
+export const getPosts = acquire
+  .createRequestHandler()
+  .withResponseMapping(UserModel, UserDTO)
+  .get<{
+    createdByUserId?: number;
+    page?: number;
+    pageSize?: number;
+    sortBy?: keyof PostDTO;
+    sortByDescending?: boolean;
+  }>({
     url: "http://api.example.com/posts",
-    params: (callArgs) => ({
-      createdByUserId: callArgs?.createdByUserId,
-      page: callArgs?.page,
-      pageSize: callArgs?.pageSize,
-      sortBy: callArgs?.sortBy,
-      sortByDescending: callArgs?.sortByDescending
-    })
-  },
-  responseMapping: {
-    DTO: UserDTO,
-    Model: UserModel
-  }
-});
+    params: (callArgs) => callArgs
+  });
 ```
 
 Here, it is assumed that the `/posts` endpoint can accept additional parameters which can be used to filter the returned posts.
@@ -671,11 +662,11 @@ As the DTOs now have relations, it is necessary to store all the mocked data som
 ```typescript
 // src/api/acquire.ts
 
-import { Acquire, AcquireLogger, AcquireMockCache } from "@acquirejs/core";
+import { Acquire, AcquireMockCache, RequestLogger } from "@acquirejs/core";
 
 const acquire = new Acquire()
   .useMockCache(new AcquireMockCache())
-  .use(new AcquireRequestLogger());
+  .use(new RequestLogger());
 
 export default acquire;
 ```

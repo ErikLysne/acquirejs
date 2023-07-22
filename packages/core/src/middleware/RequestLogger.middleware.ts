@@ -1,25 +1,26 @@
+import {
+  AcquireMiddlewareClass,
+  AcquireMiddlewareFn
+} from "@/classes/AcquireBase.class";
 import AcquireLogger, {
   AcquireLogColor,
   AcquireLoggerOptions
 } from "@/classes/AcquireLogger.class";
 import RequestMethod from "@/constants/RequestMethod.const";
 import { AcquireContext } from "@/interfaces/AcquireContext.interface";
-import {
-  AcquireMiddlewareClass,
-  AcquireMiddlewareFn
-} from "@/interfaces/AcquireMiddleware.interface";
 import axios from "axios";
 
-export interface AcquireRequestLoggerOptions extends AcquireLoggerOptions {
+export interface RequestLoggerOptions extends AcquireLoggerOptions {
   order?: number;
 }
 
-export default class AcquireRequestLogger implements AcquireMiddlewareClass {
+export default class RequestLogger
+  implements AcquireMiddlewareClass<any, any, any, any, any>
+{
   public order;
-
   private logger: AcquireLogger;
 
-  constructor(options?: AcquireRequestLoggerOptions) {
+  constructor(options?: RequestLoggerOptions) {
     const { order = 1000, ...rest } = options ?? {};
     this.logger = new AcquireLogger(rest);
     this.order = order;
@@ -44,7 +45,10 @@ export default class AcquireRequestLogger implements AcquireMiddlewareClass {
     }
   }
 
-  logAcquireCall(logger: AcquireLogger, context: AcquireContext): void {
+  logAcquireCall(
+    logger: AcquireLogger,
+    context: AcquireContext<any, any, any, any, any>
+  ): void {
     const { response, type, method, error } = context;
     const isMocked = type === "mocking";
     const isOnDemand = response.data == null && error == null;
@@ -86,7 +90,7 @@ export default class AcquireRequestLogger implements AcquireMiddlewareClass {
       : logger.info(...log);
   }
 
-  handle: AcquireMiddlewareFn = (context) => {
+  handle: AcquireMiddlewareFn<any, any, any, any, any> = (context) => {
     return this.logAcquireCall(this.logger, context);
   };
 }

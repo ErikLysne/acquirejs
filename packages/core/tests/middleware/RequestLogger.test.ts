@@ -1,9 +1,10 @@
-import { Acquire, AcquireLogger } from "@/index";
-import AcquireRequestLogger from "@/middleware/AcquireRequestLogger";
+import { Acquire } from "@/classes/Acquire.class";
+import AcquireLogger from "@/classes/AcquireLogger.class";
+import RequestLogger from "@/middleware/RequestLogger.middleware";
 import axios, { AxiosError } from "axios";
 import MockAdapter from "axios-mock-adapter";
 
-describe("middleware: AcquireRequestLogger", () => {
+describe("middleware: RequestLogger", () => {
   const { blue, green, red, cyan, yellow, brightBlack, brightBlue, reset } =
     AcquireLogger.color;
   const axiosInstance = axios.create();
@@ -12,7 +13,7 @@ describe("middleware: AcquireRequestLogger", () => {
   const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   const acquire = new Acquire(axiosInstance);
   acquire.use(
-    new AcquireRequestLogger({
+    new RequestLogger({
       timezone: "UTC"
     })
   );
@@ -45,12 +46,10 @@ describe("middleware: AcquireRequestLogger", () => {
   });
 
   it("should log executed requests", async () => {
-    mockAxios.onGet("http://example.com/users").reply(200, {});
+    mockAxios.onGet("http://api.example.com/users").reply(200, {});
 
-    const getUsers = acquire({
-      request: {
-        url: "http://example.com/users"
-      }
+    const getUsers = acquire.createRequestHandler().get({
+      url: "http://api.example.com/users"
     });
 
     await getUsers();
@@ -61,12 +60,10 @@ describe("middleware: AcquireRequestLogger", () => {
   });
 
   it("should log executed requests with errors", async () => {
-    mockAxios.onGet("http://example.com/users").reply(404, {});
+    mockAxios.onGet("http://api.example.com/users").reply(404, {});
 
-    const getUsers = acquire({
-      request: {
-        url: "http://example.com/users"
-      }
+    const getUsers = acquire.createRequestHandler().get({
+      url: "http://api.example.com/users"
     });
 
     await expect(getUsers()).rejects.toThrow();
@@ -77,10 +74,8 @@ describe("middleware: AcquireRequestLogger", () => {
   });
 
   it("should log mocked requests", async () => {
-    const getUsers = acquire({
-      request: {
-        url: "http://example.com/users"
-      }
+    const getUsers = acquire.createRequestHandler().get({
+      url: "http:/api.example.com/users"
     });
 
     await getUsers.mock();
@@ -91,10 +86,8 @@ describe("middleware: AcquireRequestLogger", () => {
   });
 
   it("should log mocked requests with errors", async () => {
-    const getUsers = acquire({
-      request: {
-        url: "http://example.com/users"
-      }
+    const getUsers = acquire.createRequestHandler().get({
+      url: "http://api.example.com/users"
     });
 
     getUsers.use((context) => {
