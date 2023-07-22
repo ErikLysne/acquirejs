@@ -1,5 +1,20 @@
 # @acquirejs/core
 
+## 0.3.0
+
+### Minor Changes
+
+- ec5a56f: Refactored core package (BREAKING CHANGE)
+
+  - Added AcquireBase class to deal with shared middleware.
+  - Renamed AcquireRequestExecutor class to AcquireRequestHandler.
+  - Reworked AcquireRequestHandlers call signature.
+  - Reworked Acquire class to generate request handlers through the createRequestHandler method.
+  - Added AcquireRequestHandlerFactory class to deal with request handler creation.
+  - Renamed AcquireRequestLogger middleware to RequestLogger.
+  - Added DelaySimulator middleware.
+  - Updated README.
+
 ## 0.2.0
 
 ### Minor Changes
