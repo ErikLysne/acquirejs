@@ -1,5 +1,11 @@
 # @acquirejs/core
 
+## 0.3.2
+
+### Patch Changes
+
+- 0c901c0: Fixed an issue with the return type of AcquireRequestHandler
+
 ## 0.3.1
 
 ### Patch Changes
