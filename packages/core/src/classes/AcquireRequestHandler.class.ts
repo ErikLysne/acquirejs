@@ -44,7 +44,7 @@ export interface AcquireRequestHandler<
   TRequestDTO extends ClassOrClassArray = never
 > {
   (...args: RequestArgs<TRequestModel, TCallArgs>): Promise<
-    AcquireResult<TResponseDTO, TResponseModel>
+    AcquireResult<TResponseModel, TResponseDTO>
   >;
 }
 
